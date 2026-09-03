@@ -90,6 +90,15 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSHighResolutionCapable</key><true/>
+  <!-- 背景程式：不佔 Dock、不進選單列。
+
+       這裡包的是純命令列程式，從不向 window server 註冊，Dock 會一直
+       等它「啟動完成」而無止境彈跳。宣告 LSUIElement 就沒有 Dock tile，
+       自然也不會彈。
+
+       代價是使用者沒有 Dock 圖示可以按右鍵結束 —— 關閉途徑改為介面右上角
+       的「結束程式」按鈕（POST /api/shutdown）。 -->
+  <key>LSUIElement</key><true/>
 </dict>
 </plist>
 PLIST
@@ -117,7 +126,10 @@ macOS 會擋下從網路或 AirDrop 傳來、未經 Apple 公證的程式，
 雙擊「BabyWei Bakery.app」，瀏覽器會自動打開。
 重複雙擊不會開出第二個，它會直接把你帶回同一個畫面。
 
-要關閉：在 Dock 上對圖示按右鍵 →「結束」。
+要關閉：點畫面右上角的「⏻ 結束程式」。
+
+這個程式在背景執行，不會出現在 Dock 上，所以關閉的按鈕在畫面裡。
+不關也沒關係 —— 它幾乎不吃資源，登出或重開機就會停。
 
 
 資料放在哪

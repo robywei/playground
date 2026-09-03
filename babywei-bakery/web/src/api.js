@@ -82,3 +82,8 @@ export const getSalesReport = (from = '', to = '') =>
 export const exportBackup = () => request('/api/export/backup.json')
 export const importLegacy = (snapshot) =>
   request('/api/import', { method: 'POST', body: snapshot })
+
+// --- 結束程式 ---
+// 只有 POST。GET 會被瀏覽器的預先擷取或誤點連結觸發，那會在使用者
+// 不知情的狀況下把程式關掉。
+export const shutdown = () => request('/api/shutdown', { method: 'POST' })

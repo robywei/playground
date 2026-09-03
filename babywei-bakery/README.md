@@ -100,6 +100,12 @@ Gatekeeper 擋下，畫面只說「無法驗證開發者」。這一行寫在包
   —— 目錄不存在時是編譯錯誤，乾淨 clone 會直接建不起來。
 - **`xattr -dr` 在程式執行中會失敗**（macOS 保護執行中程式的屬性），
   訊息是 `Operation not permitted`。先關掉再清。
+- **`.app` 包純命令列程式時，Dock 圖示會無止境彈跳。** 那支程式從不向
+  window server 註冊，Dock 就一直等它「啟動完成」。`Info.plist` 宣告
+  `LSUIElement=true` 讓它成為背景程式，沒有 Dock tile 自然不會彈 ——
+  代價是使用者少了「右鍵→結束」，所以介面右上角要有「結束程式」按鈕
+  （`POST /api/shutdown`）。**該端點只收 POST**：GET 會被瀏覽器的預先擷取
+  或誤點連結觸發，那會在使用者不知情時關掉程式。
 - **`$VAR` 後面不要直接接中文。** bash 會把多位元組字元的第一個 byte 併進
   變數名，`set -u` 下就變成 `ARCH?: 未綁定的變數`。本 repo 的訊息大量是中文，
   這個很容易踩到 —— 一律寫 `${VAR}`。shellcheck 抓不到。

@@ -365,6 +365,7 @@ GET    /api/reports/sales?from=&to=
 GET    /api/export/backup.json    # 全量匯出
 POST   /api/import                # 匯入 localStorage 格式的 JSON（見第 11 節）
 
+POST   /api/shutdown            # 結束程式，只收 POST
 GET    /healthz
 ```
 
@@ -401,6 +402,10 @@ CSV 匯出（採購明細、銷售報表）與 A4 生產表列印維持在前端
 6. 印出 SHA-256 checksum
 
 `.app` 內就是 Go binary 本身，不需要 shell wrapper。binary 啟動後自行 `exec.Command("open", "http://127.0.0.1:8787")` 開啟瀏覽器。若埠已被占用，改試後續埠號並以實際埠開啟。
+
+`Info.plist` 宣告 `LSUIElement=true`。`.app` 包的是純命令列程式，從不向 window server 註冊，Dock 會一直等它「啟動完成」而無止境彈跳；宣告為背景程式後沒有 Dock tile，自然不會彈。代價是使用者少了「Dock 右鍵 → 結束」，因此介面右上角提供「結束程式」按鈕，對應 `POST /api/shutdown`。該端點**只收 POST** —— GET 會被瀏覽器的預先擷取或誤點連結觸發，那會在使用者不知情的狀況下關掉程式。
+
+重複雙擊圖示不會開出第二個實例：啟動時先掃描本程式會用到的埠並比對 `/healthz` 的回應內容，已在執行就只把瀏覽器帶過去。否則兩個程序會寫同一個資料庫檔，而使用者分不出哪個視窗對應哪個。
 
 ### 10.1 Gatekeeper
 

@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"sync"
 	"syscall"
 	"time"
 
@@ -63,23 +64,29 @@ func main() {
 
 	go openBrowser(url)
 
-	srv := &http.Server{
-		Handler:           api.New(db, assets.FS()),
-		ReadHeaderTimeout: 10 * time.Second,
+	srv := &http.Server{ReadHeaderTimeout: 10 * time.Second}
+
+	// 只關一次：中止訊號與介面上的「結束程式」都可能觸發。
+	var once sync.Once
+	shutdown := func(reason string) {
+		once.Do(func() {
+			log.Printf("%s，正在關閉…", reason)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err := srv.Shutdown(ctx); err != nil {
+				log.Printf("關閉服務時發生錯誤: %v", err)
+			}
+		})
 	}
 
-	// 收到中止訊號時先讓進行中的請求做完，再關閉資料庫。
+	srv.Handler = api.New(db, assets.FS(), func() { shutdown("收到介面的結束要求") })
+
 	// 硬中斷雖然 SQLite 也能復原，但乾淨關閉才保證 data/ 只剩單一 .db 檔。
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-stop
-		log.Print("收到中止訊號，正在關閉…")
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(ctx); err != nil {
-			log.Printf("關閉服務時發生錯誤: %v", err)
-		}
+		shutdown("收到中止訊號")
 	}()
 
 	if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {

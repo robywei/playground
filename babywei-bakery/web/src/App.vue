@@ -46,6 +46,25 @@ provide('reload', reload)
 onMounted(reload)
 
 const activeComponent = computed(() => TABS.find((t) => t.id === active.value)?.comp)
+
+// 結束程式。.app 宣告 LSUIElement 之後沒有 Dock 圖示可以按右鍵結束，
+// 這裡是唯一的關閉途徑。
+const quitting = ref(false)
+async function quit() {
+  if (!window.confirm(
+    '確定要結束程式嗎？\n\n' +
+    '資料都已經存好了。下次要用時，再雙擊「BabyWei Bakery」圖示即可。',
+  )) return
+
+  quitting.value = true
+  try {
+    await api.shutdown()
+  } catch (e) {
+    // 後端可能在回應送達前就關了，那也算成功
+    console.debug('結束程式時的回應:', e)
+  }
+  toast.ok('已結束。這個分頁可以關掉了。')
+}
 </script>
 
 <template>
@@ -55,6 +74,9 @@ const activeComponent = computed(() => TABS.find((t) => t.id === active.value)?.
         <h1>🥖 BabyWei Bakery</h1>
         <p>本地版 · 資料存在你的電腦上</p>
       </div>
+      <button class="secondary" :disabled="quitting" @click="quit">
+        {{ quitting ? '正在關閉…' : '⏻ 結束程式' }}
+      </button>
     </div>
   </header>
 

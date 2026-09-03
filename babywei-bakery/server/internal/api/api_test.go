@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"babywei-bakery/internal/store"
 )
@@ -25,7 +26,7 @@ func newTestServer(t *testing.T) (http.Handler, *store.DB) {
 		t.Fatalf("OpenMemory: %v", err)
 	}
 	t.Cleanup(func() { db.Close() })
-	return New(db, testFS()), db
+	return New(db, testFS(), nil), db
 }
 
 // do 送出請求並回傳回應。body 為 nil 時不帶 body。
@@ -285,5 +286,43 @@ func TestEmptyListsSerializeAsArray(t *testing.T) {
 		if got := bytes.TrimSpace(rec.Body.Bytes()); string(got) != "[]" {
 			t.Errorf("%s 空集合回傳 %q, want []（null 會讓前端要多一層防禦）", path, got)
 		}
+	}
+}
+
+func TestShutdownRequiresPOST(t *testing.T) {
+	h, _ := newTestServer(t)
+	// GET 會被瀏覽器預先擷取或使用者誤點觸發，必須不通
+	if rec := do(t, h, "GET", "/api/shutdown", nil); rec.Code == http.StatusOK {
+		t.Error("GET /api/shutdown 不該成功 —— 瀏覽器預先擷取會意外關掉程式")
+	}
+}
+
+func TestShutdownWithoutHookReturns501(t *testing.T) {
+	h, _ := newTestServer(t) // shutdown 為 nil
+	rec := do(t, h, "POST", "/api/shutdown", nil)
+	if rec.Code != http.StatusNotImplemented {
+		t.Errorf("status = %d, want 501", rec.Code)
+	}
+}
+
+func TestShutdownInvokesHook(t *testing.T) {
+	db, err := store.OpenMemory()
+	if err != nil {
+		t.Fatalf("OpenMemory: %v", err)
+	}
+	t.Cleanup(func() { db.Close() })
+
+	called := make(chan struct{}, 1)
+	h := New(db, testFS(), func() { called <- struct{}{} })
+
+	rec := do(t, h, "POST", "/api/shutdown", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+	}
+	// 回應必須先送出、關閉才觸發，否則前端只看到網路錯誤
+	select {
+	case <-called:
+	case <-time.After(2 * time.Second):
+		t.Error("shutdown hook 未被呼叫")
 	}
 }
