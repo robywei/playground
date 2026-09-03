@@ -68,9 +68,11 @@
 
 ### 5.1 開發 repo
 
+專案位於 playground repo 下的 `babywei-bakery/` 子目錄。目錄名採全小寫 kebab-case：`web/package.json` 的 `name` 欄位不允許大寫（npm 對新套件名一律拒絕），Go module path 中的大寫字母會在 module cache 被轉義為 `!` + 小寫，且混用大小寫的路徑在不分大小寫的 macOS 與分大小寫的 CI 之間是 git 的常見地雷。此命名僅適用於原始碼；交付給使用者的 bundle 仍為 `BabyWei Bakery.app`（見 5.2）。
+
 ```
-playground/
-├── go.mod
+babywei-bakery/
+├── go.mod                      # module babywei-bakery
 ├── main.go                     # 進入點：解析路徑、起服務、開瀏覽器
 ├── internal/
 │   ├── store/
@@ -100,8 +102,11 @@ playground/
 ├── scripts/
 │   └── build-release.sh
 ├── docs/superpowers/specs/
-└── templates/index.html        # 原始參考範本，不再維護
+├── templates/index.html        # 原始參考範本，不再維護
+└── data/                       # 執行期產生，已 gitignore
 ```
+
+版控排除項（設於 playground repo 根目錄的 `.gitignore`）：`babywei-bakery/data/`、`babywei-bakery/bakery`、`babywei-bakery/release/`、`node_modules/`。
 
 `internal/domain/` 是刻意的邊界：這四個檔案是純函數，輸入資料結構、輸出數字，不碰資料庫也不碰 HTTP。它們承載這套系統的全部價值，也是最容易算錯的地方，必須能獨立測試。
 
