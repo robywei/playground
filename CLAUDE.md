@@ -20,6 +20,13 @@
 （設定 [`.cliff.toml`](.cliff.toml)，跨 repo 標準版，改動前先讀該檔檔頭）。
 手寫的條目下次生成就消失。
 
+```sh
+git-cliff --config .cliff.toml -o CHANGELOG.md
+```
+
+生成後以 `chore(changelog):` 提交 —— `.cliff.toml` 會把這類 commit 從下一次生成
+中 skip 掉，否則每次「生成 → commit」都會多一條噪音條目。
+
 於是 **commit message 就是 CHANGELOG 的唯一內容來源，而且寫錯無法事後修**
 （改 message ＝ 改寫歷史）：
 
