@@ -35,7 +35,7 @@
 ## 4. 技術選型
 
 | 層 | 選型 | 版本 |
-|---|---|---|
+| --- | --- | --- |
 | 前端框架 | Vue 3 | 3.x |
 | 前端建置 | Vite | 最新穩定版 |
 | 後端 | Go `net/http` | 1.27 |
@@ -57,7 +57,7 @@
 ### 4.2 交付大小對照
 
 | | Go | Node | Python |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 交付 zip | 3.3 MB | 37.3 MB | ~25–40 MB（需自帶 CPython） |
 | 解壓後 | 7.7 MB | 116.3 MB | 60–120 MB |
 | 交付檔案數 | 1（前端已 embed） | node + server/ + public/ | framework 整棵樹 |
@@ -70,7 +70,7 @@
 
 專案位於 playground repo 下的 `babywei-bakery/` 子目錄。目錄名採全小寫 kebab-case：`web/package.json` 的 `name` 欄位不允許大寫（npm 對新套件名一律拒絕），Go module path 中的大寫字母會在 module cache 被轉義為 `!` + 小寫，且混用大小寫的路徑在不分大小寫的 macOS 與分大小寫的 CI 之間是 git 的常見地雷。此命名僅適用於原始碼；交付給使用者的 bundle 仍為 `BabyWei Bakery.app`（見 5.2）。
 
-```
+```text
 babywei-bakery/
 ├── go.mod                      # module babywei-bakery
 ├── main.go                     # 進入點：解析路徑、起服務、開瀏覽器
@@ -112,7 +112,7 @@ babywei-bakery/
 
 ### 5.2 交付結構（解壓後）
 
-```
+```text
 BabyWei Bakery/
 ├── BabyWei Bakery.app/
 │   └── Contents/
@@ -136,7 +136,7 @@ SQLite，`journal_mode=delete`（預設）。不使用 WAL：本應用只有單�
 
 **外鍵約束必須在 DSN 明確開啟。** SQLite 的 `foreign_keys` 預設為關閉，`modernc.org/sqlite` 亦然。實測結果：使用預設 DSN 時 `PRAGMA foreign_keys` 回傳 0，本節所有 `ON DELETE CASCADE` **靜默失效**（刪除父列後子列殘留），且可成功插入指向不存在父列的孤兒資料而無任何錯誤。因此連線 DSN 必須為：
 
-```
+```text
 data/babywei.db?_pragma=foreign_keys(1)
 ```
 
@@ -230,7 +230,7 @@ Schema 版本以 `PRAGMA user_version` 追蹤，遷移檔為 `schema/NNN_*.sql`�
 
 ### 6.1 對範本行為的三處修正
 
-**(a) 生產消耗改為寫入時快照 —— 修正兩個 bug**
+#### (a) 生產消耗改為寫入時快照 —— 修正兩個 bug
 
 範本的 `renderInventory()` 從 `log.productId` 反查**當前**的商品與配方定義，即時重算歷史消耗量：
 
@@ -246,13 +246,13 @@ if(p) { getUsage(... p.doughWeight * log.qty ...); }
 
 修正方式：在確認生產的當下，於同一個交易內計算每項原料的消耗克數並寫入 `production_consumption`。庫存查詢改為直接加總該表，不再依賴當前配方定義。
 
-**(b) 未曾進貨的材料消耗會被靜默丟棄**
+#### (b) 未曾進貨的材料消耗會被靜默丟棄
 
 範本的 `getUsage()` 中有 `if(ingMap[name]) ingMap[name].totalUsed += use;`，而 `ingMap` 只由進貨紀錄建立。若配方使用了某項從未進貨的材料，它的消耗會被無聲丟棄，且該材料不會出現在庫存表上。
 
 修正方式：庫存表以「進貨紀錄」與「消耗紀錄」兩者的材料名稱聯集為列。從未進貨但已消耗的材料，總進貨量顯示 0、剩餘為負值，並標示為異常，讓使用者看得見漏登的進貨。
 
-**(c) 寫死的日期**
+#### (c) 寫死的日期
 
 範本有兩處寫死 `"2026-09-03"`：`load()` 中的 `todayStr`（初始化所有日期欄位），以及 `confirmProductionAndDeduct()` 中的 `date`。兩處都改為取當下日期。
 
@@ -264,7 +264,7 @@ if(p) { getUsage(... p.doughWeight * log.qty ...); }
 
 範本取「最近一筆進貨價」（`getCostPerG` 依 `purchaseDate` 倒序取第一筆）。改為全期加權平均：
 
-```
+```text
 cost_per_g(材料) = Σ(該材料所有進貨的 price) / Σ(該材料所有進貨的 weight_g)
 ```
 
@@ -277,13 +277,15 @@ cost_per_g(材料) = Σ(該材料所有進貨的 price) / Σ(該材料所有進�
 沿用範本已驗證的公式（`buildProdTable`）。
 
 產品配方（Baker's %）：
-```
+
+```text
 sum      = Σ pct
 用量(材料) = 需求總重 × pct(材料) / sum
 ```
 
 配料（絕對克數）：
-```
+
+```text
 sum      = Σ weight_g
 用量(材料) = 需求總重 × weight_g(材料) / sum
 ```
@@ -292,7 +294,7 @@ sum      = Σ weight_g
 
 ### 7.3 商品單顆成本
 
-```
+```text
 單顆成本 = Σ(產品配方各材料用量 × cost_per_g)
          + Σ(配料1各材料用量 × cost_per_g)
          + Σ(配料2各材料用量 × cost_per_g)
@@ -302,7 +304,7 @@ sum      = Σ weight_g
 
 ### 7.4 庫存
 
-```
+```text
 總進貨(材料) = Σ purchases.weight_g       WHERE name = 材料
 總消耗(材料) = Σ production_consumption.consumed_g  WHERE ingredient_name = 材料
 剩餘(材料)   = 總進貨 - 總消耗
@@ -312,7 +314,7 @@ sum      = Σ weight_g
 
 ### 7.5 利潤報表
 
-```
+```text
 營收 = Σ (sales.qty × sales.unit_price)
 成本 = Σ (sales.qty × sales.unit_cost)
 利潤 = 營收 - 成本
@@ -324,7 +326,7 @@ sum      = Σ weight_g
 
 全部為 JSON，僅綁 `127.0.0.1`，無認證。
 
-```
+```http
 GET    /api/purchases?from=&to=&q=
 POST   /api/purchases
 PATCH  /api/purchases/{id}
@@ -369,7 +371,7 @@ CSV 匯出（採購明細、銷售報表）與 A4 生產表列印維持在前端
 ## 9. 資料保留與備份
 
 | 項目 | 做法 |
-|---|---|
+| --- | --- |
 | 資料庫位置 | `BabyWei Bakery/data/babywei.db` |
 | journal 模式 | `delete`（單檔，見第 6 節） |
 | 自動備份 | **每次啟動**執行 `VACUUM INTO data/backups/YYYY-MM-DD-HHMMSS.db` |
@@ -402,7 +404,7 @@ CSV 匯出（採購明細、銷售報表）與 A4 生產表列印維持在前端
 
 處理方式：首次安裝時由專案發起人執行一次
 
-```
+```sh
 xattr -dr com.apple.quarantine "/path/to/BabyWei Bakery"
 ```
 
@@ -414,7 +416,7 @@ Go 在 darwin/arm64 已自動 ad-hoc 簽章，這是 Apple Silicon 執行的必�
 
 `POST /api/import` 接受範本 `localStorage` 的 `babywei_local` 鍵值原始 JSON 結構：
 
-```
+```text
 { costDB: [...], dough: [...], fillings: [...], products: [...], sales: [...], productionLogs: [...] }
 ```
 
