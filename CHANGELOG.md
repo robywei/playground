@@ -10,6 +10,10 @@ The format is based on:
 
 ### 📅 2026-09-03
 
+- **🐛 Fixed** *(babywei-bakery)* 🔕 Dock 圖示無止境彈跳 —— 改宣告為背景程式 - ([c6a3e70](https://github.com/robywei/playground/commit/c6a3e70f4ccf2a68e28e3b61dba54a06c7282ecd))
+
+- **⚙️ Chore** *(babywei-bakery)* 🙈 `.gitattributes` 讓 bundle diff 不再洗版 - ([810dc45](https://github.com/robywei/playground/commit/810dc456b061c99fd30082bdd70a8a226355b606))
+
 - **✨ Added** *(babywei-bakery)* 🎨 加入麵包圖示，`.app` 與瀏覽器分頁共用同一張 - ([983514c](https://github.com/robywei/playground/commit/983514c05108a53eca99fc431bbaf56217295574))
 
 - **🐛 Fixed** *(babywei-bakery)* 🐛 `$ARCH（` 讓 bash 把中文字首 byte 併進變數名 - ([52054d6](https://github.com/robywei/playground/commit/52054d670ba8a073f96d7889245c3c8ddc7a7d78))
