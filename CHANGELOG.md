@@ -10,6 +10,20 @@ The format is based on:
 
 ### 📅 2026-09-03
 
+- **✨ Added** *(babywei-bakery)* 🎨 Vue 3 前端 7 個 tab，並 embed 進單一 binary - ([ceeed20](https://github.com/robywei/playground/commit/ceeed2032d0ac324f844d5de04637232fa0ae2f8))
+
+- **✨ Added** *(babywei-bakery)* 🌐 HTTP 服務與完整 API（15 個端點） - ([9365fd9](https://github.com/robywei/playground/commit/9365fd9bc57c889a23d9e1127c47372cace84d04))
+
+- **✨ Added** *(babywei-bakery)* 🗄️ store CRUD —— 商品、出貨與生產（消耗快照走交易） - ([0090b3c](https://github.com/robywei/playground/commit/0090b3cbe2e75cc569746fc75c7d876d2852b82f))
+
+- **✨ Added** *(babywei-bakery)* 🗄️ store CRUD —— 進貨、產品配方、配料 - ([d35851d](https://github.com/robywei/playground/commit/d35851dfc762460d9af4dab38cc74d5811df9783))
+
+- **✨ Added** *(babywei-bakery)* 🧮 領域層 —— 配方換算、加權平均成本、庫存與報表 - ([2b6b2a5](https://github.com/robywei/playground/commit/2b6b2a51abae7900192a9f3d6e37b215912a3b86))
+
+- **✨ Added** *(babywei-bakery)* 🗄️ 資料層 —— schema、migration 與啟動備份 - ([16c1c03](https://github.com/robywei/playground/commit/16c1c03071ccd57766b6782458865b5edc82b768))
+
+- **📚 Docs** *(babywei-bakery)* 📋 初版實作計劃（spec 階段 1–3，18 個 task） - ([ffc3c77](https://github.com/robywei/playground/commit/ffc3c771decf798dc2e2ee7647ff4306805d716f))
+
 - **📚 Docs** 📝 `CLAUDE.md` 補上 CHANGELOG 的重新生成指令 - ([9184aa3](https://github.com/robywei/playground/commit/9184aa33f7c9e3e5138499afe71866e6971e4c05))
 
 - **⚙️ Chore** *(lint)* 🔧 markdown 檢查改走 `markdownlint-cli2`，設定合併為單一檔案 - ([acdc097](https://github.com/robywei/playground/commit/acdc09780816cc36868421b0d9ab6bbb1f8d9b2c))
