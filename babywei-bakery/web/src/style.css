@@ -1,0 +1,86 @@
+/* 自 templates/index.html 的 <style> 移植。初版目標是行為正確，
+   不重新設計介面，因此視覺刻意與原型一致。 */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f7f4ef;
+  color: #403930;
+  font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+}
+
+header {
+  background: #fff;
+  border-bottom: 1px solid #e5ddd4;
+  padding: 16px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.head { max-width: 1150px; margin: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.brand h1 { margin: 0; font-size: 22px; }
+.brand p { margin: 3px 0 0; color: #8c8177; font-size: 13px; }
+
+nav { max-width: 1150px; margin: 16px auto 0; padding: 0 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { background: #eee8e1; color: #51483f; border: 0; border-radius: 9px; padding: 10px 14px; font-weight: 600; cursor: pointer; font-size: 14px; }
+.tab.active { background: #5d5146; color: #fff; }
+
+main { max-width: 1150px; margin: 0 auto; padding: 0 16px 30px; }
+.card { background: #fff; border: 1px solid #e5ddd4; border-radius: 16px; padding: 20px; margin-top: 16px; box-shadow: 0 3px 14px rgba(70,55,40,.05); }
+
+h2 { font-size: 18px; margin: 0 0 15px; }
+h3 { font-size: 15px; margin: 18px 0 8px; }
+label { display: block; font-size: 13px; color: #776d63; margin: 9px 0 5px; }
+
+input, select, textarea {
+  width: 100%; padding: 10px 11px; border: 1px solid #d8cfc5;
+  border-radius: 9px; font-size: 15px; background: #fff; font-family: inherit;
+}
+textarea { min-height: 120px; resize: vertical; }
+.row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+button { border: 0; border-radius: 9px; padding: 10px 14px; font-weight: 600; cursor: pointer; background: #5d5146; color: #fff; font-size: 14px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.secondary { background: #eee8e1; color: #51483f; }
+.danger { background: #b45f57; color: #fff; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 620px; }
+th, td { padding: 9px 7px; border-bottom: 1px solid #eee8e1; text-align: right; font-size: 14px; }
+th:first-child, td:first-child { text-align: left; }
+th { color: #756b61; font-weight: 600; }
+td input { padding: 7px 8px; font-size: 14px; }
+
+.notice { background: #fbf6ec; border-left: 4px solid #c7a774; padding: 11px 13px; border-radius: 7px; font-size: 13px; line-height: 1.6; margin-bottom: 15px; }
+.warn { background: #fdf1ef; border-left-color: #b45f57; }
+
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin: 14px 0; }
+.metric { background: #f7f3ee; border-radius: 11px; padding: 11px; font-size: 13px; color: #776d63; }
+.metric b { display: block; font-size: 18px; margin-top: 4px; color: #2c2722; }
+
+.profit-good { color: #3d7a4f !important; }
+.profit-warn { color: #b45f57 !important; }
+.muted { color: #8c8177; font-size: 13px; }
+
+.search-box { background: #faf8f5; padding: 15px; border-radius: 10px; border: 1px solid #e5ddd4; margin-bottom: 20px; }
+
+.badge { font-size: 12px; padding: 3px 8px; border-radius: 6px; font-weight: 600; white-space: nowrap; }
+.badge-ok { background: #e7f2ea; color: #3d7a4f; }
+.badge-low { background: #fdf1e3; color: #b3741a; }
+.badge-out { background: #fdeceb; color: #b45f57; }
+
+.toast { position: fixed; right: 18px; bottom: 18px; z-index: 50; display: flex; flex-direction: column; gap: 8px; max-width: min(420px, calc(100vw - 36px)); }
+.toast div { padding: 12px 15px; border-radius: 10px; font-size: 14px; box-shadow: 0 6px 20px rgba(70,55,40,.18); line-height: 1.5; }
+.toast .ok { background: #3d7a4f; color: #fff; }
+.toast .err { background: #b45f57; color: #fff; }
+
+@media (max-width: 850px) {
+  .grid { grid-template-columns: 1fr; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .row { grid-template-columns: 1fr; }
+  .head { align-items: flex-start; flex-direction: column; }
+  .card { padding: 16px; }
+}

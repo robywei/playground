@@ -23,3 +23,4 @@ babywei-bakery/release/
 ## 前端依賴
 node_modules/
 babywei-bakery/web/node_modules/
+babywei-bakery/web/dist/
