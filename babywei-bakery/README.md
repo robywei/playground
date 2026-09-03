@@ -38,6 +38,8 @@ server/            Go 後端。分層是 store ← domain ← api
   internal/api/      路由與 handler，串接前兩者
   internal/assets/   go:embed 前端產出
 web/               Vue 3 前端。src/api.js 是唯一的 fetch 封裝層
+  public/icon.png    圖示的單一來源：同時是瀏覽器 favicon 與 .app 圖示
+                     （build-release.sh 用 sips + iconutil 轉成 .icns）
 scripts/           建置腳本
 bin/               開發建置產出（gitignore）
 release/           交付包（gitignore）

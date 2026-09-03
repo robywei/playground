@@ -34,7 +34,7 @@ APP="$STAGE/$APP_NAME.app"
 
 echo "==> 清理"
 rm -rf "$RELEASE_DIR"
-mkdir -p "$APP/Contents/MacOS" "$STAGE/data"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$STAGE/data"
 
 echo "==> 建置前端"
 (cd web && npm ci --silent && npm run build)
@@ -59,6 +59,20 @@ case "$ARCH" in
 esac
 echo "    架構: $(lipo -archs "$APP/Contents/MacOS/bakery")"
 
+echo "==> 產生圖示"
+# 單一來源是 web/public/icon.png —— 同一張圖同時是 .app 圖示與瀏覽器 favicon。
+ICONSET="$RELEASE_DIR/AppIcon.iconset"
+mkdir -p "$ICONSET"
+for spec in "16 icon_16x16" "32 icon_16x16@2x" "32 icon_32x32" "64 icon_32x32@2x" \
+            "128 icon_128x128" "256 icon_128x128@2x" "256 icon_256x256" \
+            "512 icon_256x256@2x" "512 icon_512x512" "1024 icon_512x512@2x"; do
+  px="${spec%% *}"
+  name="${spec#* }"
+  sips -s format png -z "$px" "$px" web/public/icon.png --out "$ICONSET/$name.png" >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+rm -rf "$ICONSET"
+
 echo "==> 組裝 .app"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -73,6 +87,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleExecutable</key><string>bakery</string>
   <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>NSHighResolutionCapable</key><true/>
 </dict>
