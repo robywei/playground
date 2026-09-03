@@ -10,6 +10,10 @@ The format is based on:
 
 ### 📅 2026-09-03
 
+- **✨ Added** *(babywei-bakery)* 📦 交付包 —— `.app` bundle 與 4.5 MB zip - ([257bf24](https://github.com/robywei/playground/commit/257bf24bcbf78548cef94f8f098f60a52ae8e862))
+
+- **✏️ Changed** *(babywei-bakery)* 📁 binary 產出移到 `bin/bakery` - ([c902585](https://github.com/robywei/playground/commit/c90258551ddf24343f66d1dbadc2ca5e5d583cc1))
+
 - **✨ Added** *(babywei-bakery)* 🎨 Vue 3 前端 7 個 tab，並 embed 進單一 binary - ([ceeed20](https://github.com/robywei/playground/commit/ceeed2032d0ac324f844d5de04637232fa0ae2f8))
 
 - **✨ Added** *(babywei-bakery)* 🌐 HTTP 服務與完整 API（15 個端點） - ([9365fd9](https://github.com/robywei/playground/commit/9365fd9bc57c889a23d9e1127c47372cace84d04))
