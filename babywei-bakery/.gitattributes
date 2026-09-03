@@ -1,0 +1,12 @@
+## babywei-bakery 專案自己的屬性設定。路徑相對於本目錄。
+
+## server/internal/assets/dist/ 是 `vite build` 的產出，必須進版控 ——
+## go:embed 在目標目錄不存在時是編譯錯誤而非執行期錯誤，乾淨 clone
+## 沒有它就直接 go build 失敗。代價是每次改前端都帶一份 bundle diff。
+##
+##   -diff                  git 當二進位處理，不輸出無法閱讀的逐行差異
+##   linguist-generated     GitHub 上摺疊該檔案的 diff，並排除在語言統計外
+##
+## 只套用在 assets/ 下的 minify 產物。dist/index.html 刻意留著可讀 ——
+## 它只有幾百 bytes，而且 diff 看得出嵌入的是哪個 bundle 版本。
+server/internal/assets/dist/assets/** -diff linguist-generated=true
