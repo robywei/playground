@@ -1,0 +1,15 @@
+## basic ##
+**/.DS_Store
+.vscode
+temp
+.scratch
+*.swp
+
+## 腳本就地編輯的中繼檔（sed -i.bak / trap 還原用的 .orig）
+## 正常情況下腳本自己會清掉；被中斷時殘留，不該進版控
+*.bak
+*.orig
+
+## Claude Code ##
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
