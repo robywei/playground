@@ -1,0 +1,42 @@
+// markdownlint 唯一設定檔。
+//
+// 本檔同時被 CLI 與 VS Code 擴充套件讀取，且兩者綁的是同一個引擎
+// （擴充套件 0.62.1 的 dependencies 就是 markdownlint-cli2 0.23.2），
+// 因此編輯器的即時提示與 commit 前的閘門結果一致。
+//
+// 刻意只用這一份：`.markdownlint.jsonc` 與 `.markdownlintignore` 能做的事
+// 這裡都能做（`config` 放規則、`ignores` 放排除），拆成多份只會讓
+// 「規則到底在哪」多一層查找。
+{
+  // 檢查範圍。走 `scripts/lint.sh` 時不必再帶參數。
+  "globs": ["**/*.md"],
+
+  // 相依套件自帶的 .md 不是我們的文件。markdownlint 不讀 .gitignore，
+  // 所以這裡要自己排除。
+  "ignores": ["**/node_modules/**"],
+
+  "config": {
+    "default": true,
+
+    // MD013 行長度：停用。
+    //
+    // 本 repo 文件以繁體中文撰寫，硬斷行有三個具體問題：
+    //   1. 中文沒有詞界，斷行會落在任意字元之間，可讀性反而變差。
+    //   2. 硬斷行破壞 git diff —— 段落開頭插入一個詞會使整段重排，
+    //      讓 review 無法分辨真正的修改。
+    //   3. 中文為全角字元，80 字元約等於 160 顯示欄寬，此限制對中文
+    //      並不對應任何實際的視覺寬度。
+    //
+    // 改採軟換行：一個段落一行，由編輯器負責視覺折行。
+    "MD013": false,
+
+    // 以下值皆與預設相同，寫出來是為了讓風格意圖可見、
+    // 避免同一 repo 內出現多種寫法。
+    "MD004": { "style": "dash" },      // 無序清單用 -
+    "MD029": { "style": "ordered" },   // 有序清單用 1. 2. 3.
+    "MD035": { "style": "---" },       // 水平線用 ---
+    "MD048": { "style": "backtick" },  // 程式碼圍欄用反引號
+    "MD049": { "style": "asterisk" },  // 斜體用 *text*
+    "MD050": { "style": "asterisk" }   // 粗體用 **text**
+  }
+}
