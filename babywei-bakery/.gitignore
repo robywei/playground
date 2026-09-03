@@ -1,0 +1,16 @@
+## babywei-bakery 專案自己的忽略規則。
+## 路徑相對於本目錄，與 playground 根目錄的規則切開。
+
+## 使用者資料與自動備份 —— 絕不進版控
+data/
+
+## 建置產物
+bin/
+release/
+
+## 前端依賴
+web/node_modules/
+
+## 注意：server/internal/assets/dist/ 刻意「不」忽略。
+## go:embed 在目標目錄不存在時是編譯錯誤而非執行期錯誤，
+## repo 必須保留一份佔位 index.html，乾淨 clone 才能 go build。

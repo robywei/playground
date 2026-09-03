@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 建置單一執行檔：前端 vite build → 產物由 go:embed 編進 binary。
+# 建置單一執行檔：前端 vite build 的產出由 server/ 的 go:embed 編進 binary。
 
 set -euo pipefail
 
@@ -12,7 +12,7 @@ echo "==> 建置前端"
 
 echo "==> 建置 binary"
 mkdir -p bin
-go build -ldflags="-s -w" -o bin/bakery .
+go -C server build -ldflags="-s -w" -o "$ROOT/bin/bakery" .
 
 size_mb=$(echo "scale=1; $(stat -f %z bin/bakery) / 1048576" | bc)
 echo "==> 完成: $ROOT/bin/bakery (${size_mb} MB)"

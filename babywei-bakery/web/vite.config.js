@@ -4,9 +4,9 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   // 產出直接落在 Go 的 embed 目錄。go:embed 不能跨越 ..，
-  // 所以產物必須實際位於 internal/assets/ 之下。
+  // 所以產物必須實際位於 server/internal/assets/ 之下。
   build: {
-    outDir: '../internal/assets/dist',
+    outDir: '../server/internal/assets/dist',
     emptyOutDir: true,
   },
   server: {

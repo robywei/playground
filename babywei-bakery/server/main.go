@@ -2,6 +2,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -9,7 +11,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"babywei-bakery/internal/api"
@@ -23,7 +27,21 @@ const (
 	portTries = 10
 )
 
+// version 由 build-release.sh 於建置時以 -ldflags -X 注入。
+var version = "dev"
+
 func main() {
+	// 已經有一個實例在跑時，只把瀏覽器帶過去就好。
+	// 使用者重複雙擊圖示是常態，開出第二個實例會讓兩個程序寫同一個
+	// 資料庫檔，而且她分不出來哪個視窗是哪個。
+	if url, ok := findRunningInstance(); ok {
+		log.Printf("已有執行中的實例: %s", url)
+		openBrowser(url)
+		return
+	}
+
+	log.Printf("BabyWei Bakery %s", version)
+
 	dataDir, err := resolveDataDir()
 	if err != nil {
 		fatal("無法決定資料目錄", err)
@@ -49,9 +67,45 @@ func main() {
 		Handler:           api.New(db, assets.FS()),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
+
+	// 收到中止訊號時先讓進行中的請求做完，再關閉資料庫。
+	// 硬中斷雖然 SQLite 也能復原，但乾淨關閉才保證 data/ 只剩單一 .db 檔。
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-stop
+		log.Print("收到中止訊號，正在關閉…")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("關閉服務時發生錯誤: %v", err)
+		}
+	}()
+
 	if err := srv.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		fatal("服務異常結束", err)
 	}
+	log.Print("已關閉")
+}
+
+// findRunningInstance 掃描本程式會用到的埠，找出已在執行的實例。
+// 靠 /healthz 的回應內容辨識，避免把別的服務誤認成自己。
+func findRunningInstance() (string, bool) {
+	client := &http.Client{Timeout: 300 * time.Millisecond}
+	for i := range portTries {
+		url := fmt.Sprintf("http://127.0.0.1:%d", basePort+i)
+		resp, err := client.Get(url + "/healthz")
+		if err != nil {
+			continue
+		}
+		body := make([]byte, 64)
+		n, _ := resp.Body.Read(body)
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusOK && bytes.Contains(body[:n], []byte(`"status":"ok"`)) {
+			return url, true
+		}
+	}
+	return "", false
 }
 
 // resolveDataDir 決定資料目錄。BAKERY_DATA_DIR 優先。

@@ -68,47 +68,51 @@
 
 ### 5.1 開發 repo
 
-專案位於 playground repo 下的 `babywei-bakery/` 子目錄。目錄名採全小寫 kebab-case：`web/package.json` 的 `name` 欄位不允許大寫（npm 對新套件名一律拒絕），Go module path 中的大寫字母會在 module cache 被轉義為 `!` + 小寫，且混用大小寫的路徑在不分大小寫的 macOS 與分大小寫的 CI 之間是 git 的常見地雷。此命名僅適用於原始碼；交付給使用者的 bundle 仍為 `BabyWei Bakery.app`（見 5.2）。
+專案位於 playground repo 下的 `babywei-bakery/` 子目錄，前端與後端各有獨立目錄。目錄名採全小寫 kebab-case：`web/package.json` 的 `name` 欄位不允許大寫（npm 對新套件名一律拒絕），Go module path 中的大寫字母會在 module cache 被轉義為 `!` + 小寫，且混用大小寫的路徑在不分大小寫的 macOS 與分大小寫的 CI 之間是 git 的常見地雷。此命名僅適用於原始碼；交付給使用者的 bundle 仍為 `BabyWei Bakery.app`（見 5.2）。
 
 ```text
 babywei-bakery/
-├── go.mod                      # module babywei-bakery
-├── main.go                     # 進入點：解析路徑、起服務、開瀏覽器
-├── internal/
-│   ├── store/
-│   │   ├── db.go               # 連線、migration、啟動備份
-│   │   └── queries.go          # 所有 SQL
-│   ├── domain/
-│   │   ├── cost.go             # 加權平均單位成本、商品單顆成本
-│   │   ├── recipe.go           # 配方換算（Baker % 與絕對克數）
-│   │   ├── inventory.go        # 庫存推算
-│   │   └── report.go           # 利潤統計
-│   ├── api/
-│   │   ├── router.go
-│   │   └── handlers_*.go
-│   └── assets/
-│       └── embed.go            # //go:embed dist
-├── schema/
-│   └── 001_init.sql
-├── web/                        # Vite + Vue 3 前端原始碼
+├── server/                     # Go 後端，與前端完全分開
+│   ├── go.mod                  # module babywei-bakery
+│   ├── main.go                 # 進入點：解析路徑、起服務、開瀏覽器
+│   └── internal/
+│       ├── store/              # 持久化（不依賴 domain）
+│       │   ├── db.go           # 連線、migration、啟動備份
+│       │   ├── model.go        # 跨層共用的資料結構
+│       │   └── schema/         # 遷移檔（go:embed 不能跨越 ..）
+│       ├── domain/             # 純計算（依賴 store 的型別）
+│       │   ├── recipe.go       # 配方換算（Baker % 與絕對克數）
+│       │   ├── cost.go         # 加權平均單位成本、商品單顆成本
+│       │   ├── inventory.go    # 庫存推算
+│       │   └── report.go       # 利潤統計
+│       ├── api/                # 路由與 handler（串接前兩者）
+│       └── assets/
+│           ├── embed.go        # //go:embed all:dist
+│           └── dist/           # vite build 產出，納入版控
+├── web/                        # Vite + Vue 3 前端
 │   ├── package.json
-│   ├── vite.config.js          # build.outDir 指向 internal/assets/dist
-│   ├── index.html
+│   ├── vite.config.js          # outDir → ../server/internal/assets/dist
 │   └── src/
-│       ├── main.js
-│       ├── App.vue
 │       ├── api.js              # 唯一的 fetch 封裝層
-│       └── components/         # 7 個 tab 對應 7 個元件
+│       └── components/         # 7 個 tab 對應的元件
 ├── scripts/
-│   └── build-release.sh
-├── docs/superpowers/specs/
+│   ├── build.sh                # 開發用：建置到 bin/bakery
+│   └── build-release.sh        # 交付用：.app + zip
+├── bin/                        # 建置產物，已 gitignore
+├── docs/superpowers/{specs,plans}/
 ├── templates/index.html        # 原始參考範本，不再維護
 └── data/                       # 執行期產生，已 gitignore
 ```
 
-版控排除項（設於 playground repo 根目錄的 `.gitignore`）：`babywei-bakery/data/`、`babywei-bakery/bakery`、`babywei-bakery/release/`、`node_modules/`。
+分層是 **store ← domain ← api**：`store` 不 import `domain`，否則會循環依賴。
+`domain` 的四個檔案是純函數，不碰資料庫也不碰 HTTP，可獨立測試 —— 這是本專案
+測試策略的基礎。
 
-`internal/domain/` 是刻意的邊界：這四個檔案是純函數，輸入資料結構、輸出數字，不碰資料庫也不碰 HTTP。它們承載這套系統的全部價值，也是最容易算錯的地方，必須能獨立測試。
+版控排除項設於 `babywei-bakery/.gitignore`（與 playground 根目錄切開）：
+`data/`、`bin/`、`release/`、`web/node_modules/`。
+`server/internal/assets/dist/` 刻意**不**排除 —— `go:embed` 在目標目錄不存在時
+是編譯錯誤而非執行期錯誤，repo 必須保留一份佔位 `index.html`，乾淨 clone 才能
+`go build`。
 
 ### 5.2 交付結構（解壓後）
 
