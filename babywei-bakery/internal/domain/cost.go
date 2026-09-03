@@ -2,11 +2,9 @@ package domain
 
 import "babywei-bakery/internal/store"
 
-// Recipes 是配方查表，key 為 ID。
-type Recipes struct {
-	Doughs   map[string]store.Dough
-	Fillings map[string]store.Filling
-}
+// Recipes 是配方查表。實際型別定義在 store，因為分層是
+// store ← domain ← api：domain import store，所以 store 不能 import domain。
+type Recipes = store.RecipeSet
 
 // CostPerGram 以全期加權平均算出各材料的每克成本：
 //
