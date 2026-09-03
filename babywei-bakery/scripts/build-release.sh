@@ -13,12 +13,20 @@
 
 set -euo pipefail
 
+# 用法: ./scripts/build-release.sh [版本] [universal|arm64|amd64]
+
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 APP_NAME="BabyWei Bakery"
 BUNDLE_ID="tech.axiomgaming.babywei-bakery"
 VERSION="${1:-0.1.0}"
+
+# ARCH=universal 同時支援 Apple Silicon 與 Intel Mac（binary 大一倍）。
+# ARCH=arm64 只給 Apple Silicon。不確定對方是哪一種就用 universal ——
+# 架構不符時 macOS 只會說「應用程式無法在此 Mac 上使用」，
+# 收到的人無從判斷原因。
+ARCH="${2:-universal}"
 
 RELEASE_DIR="$ROOT/release"
 STAGE="$RELEASE_DIR/$APP_NAME"
@@ -31,8 +39,25 @@ mkdir -p "$APP/Contents/MacOS" "$STAGE/data"
 echo "==> 建置前端"
 (cd web && npm ci --silent && npm run build)
 
-echo "==> 建置 binary"
-go -C server build -ldflags="-s -w -X main.version=$VERSION" -o "$APP/Contents/MacOS/bakery" .
+echo "==> 建置 binary ($ARCH)"
+LDFLAGS="-s -w -X main.version=$VERSION"
+case "$ARCH" in
+  universal)
+    GOARCH=arm64 go -C server build -ldflags="$LDFLAGS" -o "$RELEASE_DIR/bakery-arm64" .
+    GOARCH=amd64 go -C server build -ldflags="$LDFLAGS" -o "$RELEASE_DIR/bakery-amd64" .
+    lipo -create -output "$APP/Contents/MacOS/bakery" \
+      "$RELEASE_DIR/bakery-arm64" "$RELEASE_DIR/bakery-amd64"
+    rm -f "$RELEASE_DIR/bakery-arm64" "$RELEASE_DIR/bakery-amd64"
+    ;;
+  arm64 | amd64)
+    GOARCH="$ARCH" go -C server build -ldflags="$LDFLAGS" -o "$APP/Contents/MacOS/bakery" .
+    ;;
+  *)
+    echo "✗ 未知的架構: $ARCH（可用 universal / arm64 / amd64）" >&2
+    exit 2
+    ;;
+esac
+echo "    架構: $(lipo -archs "$APP/Contents/MacOS/bakery")"
 
 echo "==> 組裝 .app"
 cat > "$APP/Contents/Info.plist" <<PLIST
@@ -111,7 +136,7 @@ codesign --verify --deep --strict "$APP"
 
 echo "==> 壓縮"
 cd "$RELEASE_DIR"
-ZIP="$APP_NAME-$VERSION.zip"
+ZIP="$APP_NAME-$VERSION-$ARCH.zip"
 zip -q -9 -r "$ZIP" "$APP_NAME"
 
 size_mb=$(echo "scale=1; $(stat -f %z "$ZIP") / 1048576" | bc)
