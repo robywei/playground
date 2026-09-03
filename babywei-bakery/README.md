@@ -98,6 +98,9 @@ Gatekeeper 擋下，畫面只說「無法驗證開發者」。這一行寫在包
   —— 目錄不存在時是編譯錯誤，乾淨 clone 會直接建不起來。
 - **`xattr -dr` 在程式執行中會失敗**（macOS 保護執行中程式的屬性），
   訊息是 `Operation not permitted`。先關掉再清。
+- **`$VAR` 後面不要直接接中文。** bash 會把多位元組字元的第一個 byte 併進
+  變數名，`set -u` 下就變成 `ARCH?: 未綁定的變數`。本 repo 的訊息大量是中文，
+  這個很容易踩到 —— 一律寫 `${VAR}`。shellcheck 抓不到。
 - **`fsevents` 的 npm install-script 警告可以忽略。** 它是 Vite 的
   optionalDependency，套件自帶預編譯 binary，`node-gyp rebuild` 只是後備方案。
   核准它只會多要求 Xcode CLT。

@@ -53,7 +53,7 @@ case "$ARCH" in
     GOARCH="$ARCH" go -C server build -ldflags="$LDFLAGS" -o "$APP/Contents/MacOS/bakery" .
     ;;
   *)
-    echo "✗ 未知的架構: $ARCH（可用 universal / arm64 / amd64）" >&2
+    echo "✗ 未知的架構: ${ARCH}（可用 universal / arm64 / amd64）" >&2
     exit 2
     ;;
 esac
