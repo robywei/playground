@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BabyWei Bakery V3.8｜Google 試算表雲端同步版</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f7f4ef;color:#403930;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC",sans-serif}
+header{background:#fff;border-bottom:1px solid #e5ddd4;padding:16px 20px;position:sticky;top:0;z-index:5}.head{max-width:1150px;margin:auto;display:flex;justify-content:space-between;align-items:center}.brand h1{margin:0;font-size:22px}.brand p{margin:3px 0 0;color:#8c8177;font-size:13px}
+nav{max-width:1150px;margin:16px auto 0;padding:0 16px;display:flex;gap:8px;flex-wrap:wrap}.tab{background:#eee8e1;color:#51483f;border:0;border-radius:9px;padding:10px 14px;font-weight:600;cursor:pointer}.tab.active{background:#5d5146;color:white}
+main{max-width:1150px;margin:0 auto;padding:0 16px 30px}.panel{display:none}.panel.active{display:block}.card{background:#fff;border:1px solid #e5ddd4;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 3px 14px rgba(70,55,40,.05)}
+h2{font-size:18px;margin:0 0 15px}h3{font-size:15px;margin:18px 0 8px}label{display:block;font-size:13px;color:#776d63;margin:9px 0 5px}
+input,select{width:100%;padding:10px 11px;border:1px solid #d8cfc5;border-radius:9px;font-size:15px;background:#fff}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:600;cursor:pointer;background:#5d5146;color:white}.secondary{background:#eee8e1;color:#51483f}.danger{background:#b45f57;color:white}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th,td{padding:9px 7px;border-bottom:1px solid #eee8e1;text-align:right;font-size:14px}th:first-child,td:first-child{text-align:left}th{color:#756b61}.pct{width:100px;text-align:right}.small{width:115px;text-align:right}
+.notice{background:#fbf6ec;border-left:4px solid #c7a774;padding:11px 13px;border-radius:7px;font-size:13px;line-height:1.6;margin-bottom:15px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:14px 0}.metric{background:#f7f3ee;border-radius:11px;padding:11px}.metric b{display:block;font-size:18px;margin-top:4px;color:#2c2722}
+.profit-good{color:#3d7a4f !important}.profit-warn{color:#b45f57 !important}
+.search-box{background:#faf8f5;padding:15px;border-radius:10px;border:1px solid #e5ddd4;margin-bottom:20px}
+.cloud-status{font-size:12px;padding:4px 8px;border-radius:6px;background:#eef2ff;color:#4f46e5;display:inline-block;margin-left:8px;font-weight:600}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.head{align-items:flex-start}.card{padding:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <div class="brand">
+      <h1>🥖 BabyWei Bakery</h1>
+      <p>V3.8 Google 試算表雲端同步版 <span id="cloudStatus" class="cloud-status">雲端同步就緒 ☁️</span></p>
+    </div>
+    <button class="secondary" onclick="resetData()">恢復範例資料</button>
+  </div>
+</header>
+
+<nav>
+  <button class="tab active" onclick="showTab('ingredients',this)">💰 成本庫 (進貨管理)</button>
+  <button class="tab" onclick="showTab('inventory',this)">📦 庫存管理</button>
+  <button class="tab" onclick="showTab('dough',this)">🥣 產品配方</button>
+  <button class="tab" onclick="showTab('filling',this)">🍯 配料(克數)</button>
+  <button class="tab" onclick="showTab('products',this)">📦 商品設定</button>
+  <button class="tab" onclick="showTab('production',this)">🧮 今日生產</button>
+  <button class="tab" onclick="showTab('profit',this)">📊 利潤與報表</button>
+</nav>
+
+<main>
+<datalist id="ingList"></datalist>
+<datalist id="dlDough"></datalist>
+<datalist id="dlFilling"></datalist>
+<datalist id="dlProducts"></datalist>
+
+<!-- 1. 材料成本庫 / 進貨管理 -->
+<section id="ingredients" class="panel active">
+  <div class="card">
+    <h2>📝 新進貨紀錄</h2>
+    <div class="notice">在此輸入材料進貨價格、數量與購入管道，系統將自動計算「每克單位成本」並儲存。</div>
+    <div class="row">
+      <div><label>材料名稱</label><input list="ingList" id="newBuyName" placeholder="例如：高筋麵粉"></div>
+      <div><label>品牌 / 規格</label><input id="newBuyBrand" placeholder="例如：水手牌 1kg"></div>
+      <div><label>購入日期</label><input type="date" id="newBuyDate"></div>
+      <div><label>購入管道</label><input id="newBuyChannel" placeholder="例如：烘焙材料行、pchome"></div>
+      <div><label>進貨總價格 ($)</label><input type="number" id="newBuyPrice" min="0" value="120"></div>
+      <div><label>進貨總重量 (g)</label><input type="number" id="newBuyWeight" min="0" value="1000"></div>
+    </div>
+    <div class="toolbar" style="margin-top:14px"><button onclick="addPurchaseRecord()">➕ 新增進貨紀錄</button></div>
+  </div>
+
+  <div class="card">
+    <h2>🔍 採購明細查詢</h2>
+    <div class="row">
+      <div><label>起始日期</label><input type="date" id="buyQueryStart"></div>
+      <div><label>結束日期</label><input type="date" id="buyQueryEnd"></div>
+      <div><label>品項 / 關鍵字搜尋</label><input type="text" id="buyQueryKeyword" placeholder="輸入材料名稱或品牌..."></div>
+    </div>
+    <div class="toolbar" style="margin-top:12px">
+      <button onclick="renderCostDB()">🔍 篩選採購明細</button>
+      <button class="secondary" onclick="exportPurchaseToExcel()">📊 匯出採購明細 CSV</button>
+    </div>
+    <div style="margin-top:15px" class="tablewrap">
+      <table><thead><tr><th>採購日期</th><th>材料名稱</th><th>品牌</th><th>購入管道</th><th>進貨價格($)</th><th>包裝重量(g)</th><th>每克單位成本</th><th></th></tr></thead><tbody id="iEditor"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- 2. 庫存管理 -->
+<section id="inventory" class="panel">
+  <div class="card">
+    <h2>📦 現有原料庫存盤點</h2>
+    <div class="notice">系統自動加總所有進貨紀錄的重量，並扣除透過「今日生產」消耗掉的原料克數。</div>
+    <div class="tablewrap"><table><thead><tr><th>材料名稱</th><th>品牌</th><th>總進貨量(g)</th><th>已生產消耗(g)</th><th>目前剩餘庫存(g)</th><th>狀態</th></tr></thead><tbody id="inventoryTable"></tbody></table></div>
+  </div>
+</section>
+
+<!-- 3. 產品配方 -->
+<section id="dough" class="panel">
+  <div class="card">
+    <div class="search-box"><label>🔍 搜尋 / 載入已建立的產品配方</label><input list="dlDough" id="searchDough" placeholder="輸入名稱搜尋..." onchange="loadDoughByName(this.value)"></div>
+    <h2>編輯產品配方</h2>
+    <label>配方名稱</label><input id="dName" placeholder="例如：奶酥吐司麵團">
+    <div class="notice" style="margin-top:10px">主粉類基準必須是 100%。其他材料以 Baker's % 表示。</div>
+    <div class="tablewrap"><table><thead><tr><th>材料名稱</th><th>Baker %</th><th></th></tr></thead><tbody id="dEditor"></tbody></table></div>
+    <div id="doughPreview" style="margin-top:10px"></div>
+    <div class="toolbar"><button onclick="addDoughIng()">＋新增材料</button><button onclick="saveDough()">💾 儲存配方</button><button class="danger" onclick="deleteDough()">🗑 刪除此配方</button><button class="secondary" onclick="newDough()">✨ 新增空白</button></div>
+  </div>
+</section>
+
+<!-- 4. 配料(克數) -->
+<section id="filling" class="panel">
+  <div class="card">
+    <div class="search-box"><label>🔍 搜尋 / 載入已建立的配料</label><input list="dlFilling" id="searchFilling" placeholder="輸入名稱搜尋..." onchange="loadFillingByName(this.value)"></div>
+    <h2>編輯配料配方</h2>
+    <label>配方名稱</label><input id="fName" placeholder="例如：奶酥餡">
+    <div class="notice" style="margin-top:10px">採「實際重量(g)」管理比例。</div>
+    <div class="tablewrap"><table><thead><tr><th>材料名稱</th><th>配方重量(g)</th><th></th></tr></thead><tbody id="fEditor"></tbody></table></div>
+    <div id="fillingPreview" style="margin-top:10px"></div>
+    <div class="toolbar"><button onclick="addFillIng()">＋新增材料</button><button onclick="saveFilling()">💾 儲存配料</button><button class="danger" onclick="deleteFilling()">🗑 刪除此配料</button><button class="secondary" onclick="newFilling()">✨ 新增空白</button></div>
+  </div>
+</section>
+
+<!-- 5. 商品設定 -->
+<section id="products" class="panel">
+  <div class="card">
+    <div class="search-box"><label>🔍 搜尋 / 載入已建立的商品</label><input list="dlProducts" id="searchProduct" placeholder="輸入名稱搜尋..." onchange="loadProductByName(this.value)"></div>
+    <h2>編輯商品設定</h2>
+    <div class="row">
+      <div><label>商品名稱</label><input id="pName" placeholder="例如：南瓜藜麥吐司"></div>
+      <div><label>預計售價 (單顆/元)</label><input id="pPrice" type="number" value="150" min="0"></div>
+    </div>
+    <hr style="border:0;border-top:1px dashed #d8cfc5;margin:15px 0">
+    <label>產品配方 (必選)</label><select id="pDough"></select>
+    <label>每個配方使用重量（g）</label><input id="pDoughWeight" type="number" value="450" min="0" step=".1">
+    <hr style="border:0;border-top:1px dashed #d8cfc5;margin:15px 0">
+    <div class="row">
+      <div><label>配料 1 (選填)</label><select id="pFilling1"></select></div>
+      <div><label>配料 1 重量（g）</label><input id="pFill1Weight" type="number" value="0" min="0" step=".1"></div>
+      <div><label>配料 2 (選填)</label><select id="pFilling2"></select></div>
+      <div><label>配料 2 重量（g）</label><input id="pFill2Weight" type="number" value="0" min="0" step=".1"></div>
+    </div>
+    <div id="productDetail" style="margin-top:16px"></div>
+    <div class="toolbar" style="margin-top:20px"><button onclick="saveProduct()">💾 儲存商品</button><button class="danger" onclick="deleteProduct()">🗑 刪除此商品</button><button class="secondary" onclick="newProduct()">✨ 新增空白商品</button></div>
+  </div>
+</section>
+
+<!-- 6. 今日生產 -->
+<section id="production" class="panel">
+  <div class="card">
+    <h2>🧮 廚房生產配方表</h2>
+    <div class="notice">在此計算今日要製作的配方重量。確認生產後，系統會自動扣除對應的原料庫存！</div>
+    <div class="row">
+      <div><label>🔍 搜尋/選擇商品</label><input list="dlProducts" id="prodSearch" placeholder="輸入商品名稱..." onchange="selectProdForCalc(this.value)"></div>
+      <div><label>生產數量（個）</label><input id="prodQty" type="number" min="1" value="10" oninput="calculateProd()"></div>
+    </div>
+    <input type="hidden" id="prodCurrentId">
+    <div class="metrics">
+      <div class="metric"><span>單顆總重</span><b id="mWeight">—</b></div>
+      <div class="metric"><span>本批配方總重</span><b id="mDoughTotal">—</b></div>
+      <div class="metric"><span>本批配料總重</span><b id="mFillTotal">—</b></div>
+    </div>
+    <div id="prodTables"></div>
+    <div class="toolbar" style="margin-top:20px">
+      <button class="secondary" onclick="printPDF()">📄 產生 A4 PDF 生產表</button>
+      <button onclick="confirmProductionAndDeduct()">✅ 確認完成生產並扣除庫存</button>
+    </div>
+  </div>
+</section>
+
+<!-- 7. 利潤與報表 -->
+<section id="profit" class="panel">
+  <div class="card">
+    <h2>📈 財務與利潤總覽</h2>
+    <div class="metrics">
+      <div class="metric"><span>本日利潤</span><b id="sDayP" class="profit-good">$0</b><span id="sDayR" style="font-size:12px;color:#776d63">營收 $0</span></div>
+      <div class="metric"><span>本月利潤</span><b id="sMonthP" class="profit-good">$0</b><span id="sMonthR" style="font-size:12px;color:#776d63">營收 $0</span></div>
+      <div class="metric"><span>本季利潤</span><b id="sQuarterP" class="profit-good">$0</b><span id="sQuarterR" style="font-size:12px;color:#776d63">營收 $0</span></div>
+      <div class="metric"><span>本年度利潤</span><b id="sYearP" class="profit-good">$0</b><span id="sYearR" style="font-size:12px;color:#776d63">營收 $0</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📝 新增出貨紀錄</h2>
+    <div class="row">
+      <div><label>出貨日期</label><input type="date" id="saleDate"></div>
+      <div><label>出貨商品 (支援搜尋)</label><input list="dlProducts" id="saleProductSearch" placeholder="輸入商品名稱..."></div>
+      <div><label>出貨數量</label><input type="number" id="saleQty" value="1" min="1"></div>
+    </div>
+    <div class="toolbar"><button onclick="addSaleRecord()">➕ 加入紀錄</button></div>
+  </div>
+
+  <div class="card">
+    <h2>🔍 歷史出貨查詢與報表</h2>
+    <div class="row">
+      <div><label>起始日期</label><input type="date" id="queryStart"></div>
+      <div><label>結束日期</label><input type="date" id="queryEnd"></div>
+    </div>
+    <div class="toolbar" style="margin-top:12px">
+      <button onclick="renderAllReports()">🔍 查詢區間明細</button>
+      <button class="secondary" onclick="exportToExcel()">📊 匯出銷售 CSV</button>
+    </div>
+    <div style="margin-top:15px">
+      <h3>📋 銷售查詢結果（總營收：<span id="queryRev">$0</span>｜總成本：<span id="queryCost">$0</span>｜預估毛利：<span id="queryProfit">$0</span>）</h3>
+      <div class="tablewrap"><table><thead><tr><th>日期</th><th>商品</th><th>數量</th><th>單顆成本</th><th>單顆售價</th><th>總營收</th><th>總利潤</th><th></th></tr></thead><tbody id="salesTable"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💰 材料採購支出與現金流</h2>
+    <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metric"><span>💵 總現金流入 (營收)</span><b id="cfRev" style="color:#3d7a4f">$0</b></div>
+      <div class="metric"><span>💸 總材料支出 (採購)</span><b id="cfExp" style="color:#b45f57">$0</b></div>
+      <div class="metric"><span>📊 淨現金流</span><b id="cfNet">$0</b></div>
+    </div>
+    <h3>📦 採購明細筆數：<span id="expCount">0</span> 筆（總計支出：<span id="expTotalAmt">$0</span>）</h3>
+    <div class="tablewrap"><table><thead><tr><th>採購日期</th><th>材料名稱</th><th>品牌</th><th>進貨價格($)</th><th>包裝重量(g)</th></tr></thead><tbody id="expenseTable"></tbody></table></div>
+  </div>
+</section>
+</main>
+
+<script>
+const sample = {
+ costDB: [
+  {id:"c1", name:"高筋麵粉", brand:"水手牌", purchaseDate:"2026-09-03", channel:"烘焙材料行", price:120, weight:1000},
+  {id:"c2", name:"牛奶", brand:"光泉", purchaseDate:"2026-09-03", channel:"全聯", price:90, weight:1000},
+  {id:"c3", name:"無鹽奶油", brand:"鐵塔牌", purchaseDate:"2026-09-03", channel:"烘焙材料行", price:180, weight:500},
+  {id:"c4", name:"糖", brand:"台糖", purchaseDate:"2026-09-03", channel:"全聯", price:40, weight:1000},
+  {id:"c5", name:"酵母", brand:"燕子牌", purchaseDate:"2026-09-03", channel:"烘焙材料行", price:150, weight:500},
+  {id:"c6", name:"鹽", brand:"台鹽", purchaseDate:"2026-09-03", channel:"全聯", price:20, weight:1000},
+  {id:"c7", name:"雞蛋", brand:"", purchaseDate:"2026-09-03", channel:"傳統市場", price:80, weight:600},
+  {id:"c8", name:"南瓜泥", brand:"", purchaseDate:"2026-09-03", channel:"傳統市場", price:60, weight:500},
+  {id:"c9", name:"熟藜麥", brand:"", purchaseDate:"2026-09-03", channel:"好市多", price:200, weight:500}
+ ],
+ dough: [{id:"d1", name:"基礎吐司麵團", ingredients:[{name:"高筋麵粉", pct:100},{name:"牛奶", pct:65},{name:"糖", pct:8},{name:"無鹽奶油", pct:10},{name:"鹽", pct:1.5},{name:"酵母", pct:1}]}],
+ fillings: [{id:"f1", name:"南瓜泥", ingredients:[{name:"南瓜泥", weight:100}]},{id:"f2", name:"熟藜麥", ingredients:[{name:"熟藜麥", weight:100}]}],
+ products: [{id:"p1", name:"南瓜藜麥吐司", price:180, doughId:"d1", doughWeight:480, fill1Id:"f1", fill1Weight:80, fill2Id:"f2", fill2Weight:40}],
+ sales: [],
+ productionLogs: []
+};
+
+let db = JSON.parse(localStorage.getItem("babywei_local") || "null") || JSON.parse(JSON.stringify(sample));
+let edit = { dough: null, filling: null, product: null };
+
+function load() {
+  let todayStr = "2026-09-03";
+  ['newBuyDate', 'buyQueryStart', 'buyQueryEnd', 'saleDate', 'queryStart', 'queryEnd'].forEach(id => {
+    let el = document.getElementById(id);
+    if(el) el.value = todayStr;
+  });
+  renderAll();
+  newDough();
+  newFilling();
+  newProduct();
+  renderAllReports();
+  calculateStats();
+  renderInventory();
+}
+
+function save() {
+  localStorage.setItem("babywei_local", JSON.stringify(db));
+}
+
+function esc(s) { return String(s || "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m])) }
+function fmt(n) { return Number(n || 0).toLocaleString("zh-TW", { maximumFractionDigits: 1 }) }
+
+function getCostPerG(name) {
+  let matches = (db.costDB || []).filter(x => x.name === name);
+  if(!matches.length) return 0;
+  matches.sort((a,b)=>(b.purchaseDate||"").localeCompare(a.purchaseDate||""));
+  let item = matches[0];
+  return item && item.weight > 0 ? item.price / item.weight : 0;
+}
+
+function showTab(id, btn) {
+  document.querySelectorAll(".panel").forEach(x => x.classList.remove("active"));
+  let targetPanel = document.getElementById(id);
+  if(targetPanel) targetPanel.classList.add("active");
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  if(id === 'production' && document.getElementById("prodCurrentId").value) calculateProd();
+  if(id === 'profit') { renderAllReports(); calculateStats(); }
+  if(id === 'inventory') { renderInventory(); }
+}
+
+function renderAll() {
+  if(!db.costDB) db.costDB = [];
+  if(!db.sales) db.sales = [];
+  if(!db.productionLogs) db.productionLogs = [];
+  if(!db.dough) db.dough = [];
+  if(!db.fillings) db.fillings = [];
+  if(!db.products) db.products = [];
+  renderCostDB();
+  updateDatalists();
+  renderSelects();
+  renderInventory();
+}
+
+function updateDatalists() {
+  let uniqueNames = [...new Set((db.costDB || []).map(x => x.name))];
+  document.getElementById("ingList").innerHTML = uniqueNames.map(x => `<option value="${esc(x)}">`).join("");
+  document.getElementById("dlDough").innerHTML = (db.dough || []).map(x => `<option value="${esc(x.name)}">`).join("");
+  document.getElementById("dlFilling").innerHTML = (db.fillings || []).map(x => `<option value="${esc(x.name)}">`).join("");
+  document.getElementById("dlProducts").innerHTML = (db.products || []).map(x => `<option value="${esc(x.name)}">`).join("");
+}
+
+function addPurchaseRecord() {
+  let name = document.getElementById("newBuyName").value.trim();
+  let brand = document.getElementById("newBuyBrand").value.trim();
+  let date = document.getElementById("newBuyDate").value;
+  let channel = document.getElementById("newBuyChannel").value.trim();
+  let price = Number(document.getElementById("newBuyPrice").value) || 0;
+  let weight = Number(document.getElementById("newBuyWeight").value) || 0;
+
+  if(!name) return alert("請輸入材料名稱");
+  if(!date) return alert("請選擇購入日期");
+
+  db.costDB.unshift({
+    id: 'c_' + Math.random().toString(36).substr(2, 9),
+    name, brand, purchaseDate: date, channel, price, weight
+  });
+
+  save();
+  renderCostDB();
+  updateDatalists();
+  renderInventory();
+  alert("進貨紀錄已新增！");
+}
+
+function renderCostDB() {
+  let start = document.getElementById("buyQueryStart")?.value || "";
+  let end = document.getElementById("buyQueryEnd")?.value || "";
+  let keyword = (document.getElementById("buyQueryKeyword")?.value || "").toLowerCase();
+
+  let filtered = (db.costDB || []).filter(x => {
+    if(start && end && x.purchaseDate && (x.purchaseDate < start || x.purchaseDate > end)) return false;
+    if(keyword && !((x.name||"").toLowerCase().includes(keyword) || (x.brand||"").toLowerCase().includes(keyword) || (x.channel||"").toLowerCase().includes(keyword))) return false;
+    return true;
+  });
+
+  filtered.sort((a,b)=>(b.purchaseDate||"").localeCompare(a.purchaseDate||""));
+
+  let html = "";
+  filtered.forEach(x => {
+    let unitCost = x.weight > 0 ? (x.price / x.weight) : 0;
+    html += `<tr>
+      <td>${esc(x.purchaseDate||'-')}</td>
+      <td><b>${esc(x.name)}</b></td>
+      <td>${esc(x.brand||'-')}</td>
+      <td>${esc(x.channel||'-')}</td>
+      <td>$${fmt(x.price)}</td>
+      <td>${fmt(x.weight)}g</td>
+      <td><b>$${unitCost.toFixed(4)}</b></td>
+      <td><button class="danger" onclick="delPurchase('${x.id}')">刪除</button></td>
+    </tr>`;
+  });
+  document.getElementById("iEditor").innerHTML = html || '<tr><td colspan="8" style="text-align:center">無符合條件的採購紀錄</td></tr>';
+}
+
+function delPurchase(id) {
+  if(!confirm("確定要刪除這筆進貨紀錄嗎？")) return;
+  db.costDB = db.costDB.filter(x => x.id !== id);
+  save();
+  renderCostDB();
+  updateDatalists();
+  renderInventory();
+}
+
+function exportPurchaseToExcel() {
+  let start = document.getElementById("buyQueryStart").value;
+  let end = document.getElementById("buyQueryEnd").value;
+  let filtered = (db.costDB || []).filter(x => (!start || !end) || (x.purchaseDate >= start && x.purchaseDate <= end));
+  if(!filtered.length) return alert("沒有資料可供匯出");
+
+  let csv = "\uFEFF採購日期,材料名稱,品牌,購入管道,進貨價格,包裝重量(g),每克單位成本\n";
+  filtered.forEach(x => {
+    let unitCost = x.weight > 0 ? (x.price / x.weight).toFixed(4) : 0;
+    csv += `${x.purchaseDate},${x.name},${x.brand||''},${x.channel||''},${x.price},${x.weight},${unitCost}\n`;
+  });
+
+  let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = `BabyWei_採購明細_${start}_to_${end}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function renderInventory() {
+  let ingMap = {};
+  (db.costDB || []).forEach(x => {
+    let name = (x.name || "").trim();
+    if(!name) return;
+    if(!ingMap[name]) ingMap[name] = { name, brand: x.brand || '', totalBought: 0, totalUsed: 0 };
+    ingMap[name].totalBought += Number(x.weight) || 0;
+  });
+
+  (db.productionLogs || []).forEach(log => {
+    let getUsage = (ingredients, reqWeight, isPct) => {
+      if(!ingredients || !reqWeight) return;
+      let sum = ingredients.reduce((a,b)=>a+(isPct?b.pct:b.weight),0);
+      let multiplier = isPct ? (reqWeight/(sum/100)) : (reqWeight/sum);
+      ingredients.forEach(x => {
+        let use = isPct ? (multiplier*x.pct/100) : (multiplier*x.weight);
+        let name = (x.name || "").trim();
+        if(ingMap[name]) ingMap[name].totalUsed += use;
+      });
+    };
+    let p = (db.products || []).find(x => x.id === log.productId);
+    if(p) {
+      getUsage((db.dough || []).find(x => x.id === p.doughId)?.ingredients, p.doughWeight * log.qty, true);
+      getUsage((db.fillings || []).find(x => x.id === p.fill1Id)?.ingredients, (p.fill1Weight || 0) * log.qty, false);
+      getUsage((db.fillings || []).find(x => x.id === p.fill2Id)?.ingredients, (p.fill2Weight || 0) * log.qty, false);
+    }
+  });
+
+  let keys = Object.keys(ingMap);
+  if(!keys.length) {
+    document.getElementById("inventoryTable").innerHTML = `<tr><td colspan="6" style="text-align:center">尚無材料與庫存資料</td></tr>`;
+    return;
+  }
+
+  let html = "";
+  keys.forEach(k => {
+    let item = ingMap[k];
+    let remain = item.totalBought - item.totalUsed;
+    let statusBadge = remain <= 0 ? '<span style="color:#b45f57;font-weight:bold">⚠️ 庫存見底</span>' : (remain < 200 ? '<span style="color:#d97706">⚡ 庫存偏低</span>' : '<span style="color:#3d7a4f">✅ 充足</span>');
+    html += `<tr><td><b>${esc(item.name)}</b></td><td>${esc(item.brand)}</td><td>${fmt(item.totalBought)}g</td><td>${fmt(item.totalUsed)}g</td><td><b>${fmt(remain)}g</b></td><td>${statusBadge}</td></tr>`;
+  });
+  document.getElementById("inventoryTable").innerHTML = html;
+}
+
+function renderSelects() {
+  const ds = document.getElementById("pDough"), f1s = document.getElementById("pFilling1"), f2s = document.getElementById("pFilling2");
+  if(!ds) return;
+  let dOpts = '<option value="">— 選擇產品配方 —</option>' + (db.dough || []).map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join("");
+  let fOpts = '<option value="">— 無 —</option>' + (db.fillings || []).map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join("");
+  ds.innerHTML = dOpts; f1s.innerHTML = fOpts; f2s.innerHTML = fOpts;
+}
+
+function loadProductByName(val) { let x = (db.products || []).find(p => p.name === val); if(x) editProduct(x.id); document.getElementById("searchProduct").value = ""; }
+function newProduct() {
+  edit.product = null;
+  document.getElementById("pName").value = "";
+  document.getElementById("pPrice").value = 150;
+  document.getElementById("pDoughWeight").value = 450;
+  document.getElementById("pFill1Weight").value = 0;
+  document.getElementById("pFill2Weight").value = 0;
+  document.getElementById("pDough").value = "";
+  document.getElementById("pFilling1").value = "";
+  document.getElementById("pFilling2").value = "";
+  document.getElementById("productDetail").innerHTML = "";
+}
+function editProduct(id) {
+  let x = (db.products || []).find(x => x.id === id); if(!x) return; edit.product = id;
+  document.getElementById("pName").value = x.name;
+  document.getElementById("pPrice").value = x.price || 0;
+  document.getElementById("pDoughWeight").value = x.doughWeight;
+  document.getElementById("pFill1Weight").value = x.fill1Weight || 0;
+  document.getElementById("pFill2Weight").value = x.fill2Weight || 0;
+  document.getElementById("pDough").value = x.doughId;
+  document.getElementById("pFilling1").value = x.fill1Id || "";
+  document.getElementById("pFilling2").value = x.fill2Id || "";
+  document.getElementById("productDetail").innerHTML = `<div class="notice">目前編輯：<b>${esc(x.name)}</b></div>`;
+}
+function saveProduct() {
+  let name = document.getElementById("pName").value.trim(), d = document.getElementById("pDough").value;
+  if(!name) return alert("請輸入商品名稱");
+  if(!d) return alert("請至少選擇產品配方");
+  let x = {
+    id: edit.product || ('p_' + Math.random().toString(36).substr(2, 9)),
+    name, price: Number(document.getElementById("pPrice").value) || 0,
+    doughId: d, doughWeight: Number(document.getElementById("pDoughWeight").value) || 0,
+    fill1Id: document.getElementById("pFilling1").value || null, fill1Weight: Number(document.getElementById("pFill1Weight").value) || 0,
+    fill2Id: document.getElementById("pFilling2").value || null, fill2Weight: Number(document.getElementById("pFill2Weight").value) || 0
+  };
+  let i = (db.products || []).findIndex(y => y.id === x.id);
+  i >= 0 ? db.products[i] = x : db.products.push(x);
+  edit.product = x.id; save(); renderAll(); editProduct(x.id); alert("商品已儲存！");
+}
+function deleteProduct() {
+  if(!edit.product) return;
+  if(!confirm("確定要刪除此商品嗎？")) return;
+  db.products = db.products.filter(x => x.id !== edit.product);
+  save(); renderAll(); newProduct(); alert("商品已刪除");
+}
+
+function loadDoughByName(val) { let x = (db.dough || []).find(p => p.name === val); if(x) editDough(x.id); document.getElementById("searchDough").value = ""; }
+function loadFillingByName(val) { let x = (db.fillings || []).find(p => p.name === val); if(x) editFilling(x.id); document.getElementById("searchFilling").value = ""; }
+
+function readTable(id, isWeight) {
+  return [...document.querySelectorAll(`#${id} tr`)].map(tr => {
+    let a = tr.querySelectorAll("input");
+    return isWeight ? { name: a[0].value.trim(), weight: Number(a[1].value) || 0 } : { name: a[0].value.trim(), pct: Number(a[1].value) || 0 };
+  }).filter(x => x.name);
+}
+function renderTable(id, a, isWeight) {
+  document.getElementById(id).innerHTML = a.map((x, i) => `<tr><td><input list="ingList" value="${esc(x.name)}"></td><td><input class="${isWeight?'small':'pct'}" type="number" step="${isWeight?'.1':'.01'}" min="0" value="${isWeight?x.weight:x.pct}"></td><td><button class="danger" onclick="${isWeight?'delF':'delD'}(${i})">刪除</button></td></tr>`).join("");
+}
+
+function addDoughIng() { let a = readTable("dEditor", false); a.push({name:"", pct:0}); renderTable("dEditor", a, false); }
+function delD(i) { let a = readTable("dEditor", false); a.splice(i, 1); renderTable("dEditor", a, false); }
+function newDough() { edit.dough = null; document.getElementById("dName").value = ""; renderTable("dEditor", [{name:"高筋麵粉", pct:100}], false); document.getElementById("doughPreview").innerHTML = ""; }
+function editDough(id) { let x = (db.dough || []).find(x => x.id === id); if(!x) return; edit.dough = id; document.getElementById("dName").value = x.name; renderTable("dEditor", x.ingredients, false); document.getElementById("doughPreview").innerHTML = `<div class="notice">目前編輯：<b>${esc(x.name)}</b></div>`; }
+function saveDough() {
+  let name = document.getElementById("dName").value.trim(), ing = readTable("dEditor", false);
+  if(!name) return alert("請輸入配方名稱");
+  let x = { id: edit.dough || ('d_' + Math.random().toString(36).substr(2, 9)), name, ingredients: ing };
+  let i = (db.dough || []).findIndex(y => y.id === x.id);
+  i >= 0 ? db.dough[i] = x : db.dough.push(x);
+  edit.dough = x.id; save(); renderAll(); editDough(x.id); alert("產品配方已儲存！");
+}
+function deleteDough() {
+  if(!edit.dough) return;
+  if(!confirm("確定要刪除此產品配方嗎？")) return;
+  db.dough = db.dough.filter(x => x.id !== edit.dough);
+  save(); renderAll(); newDough(); alert("配方已刪除");
+}
+
+function addFillIng() { let a = readTable("fEditor", true); a.push({name:"", weight:0}); renderTable("fEditor", a, true); }
+function delF(i) { let a = readTable("fEditor", true); a.splice(i, 1); renderTable("fEditor", a, true); }
+function newFilling() { edit.filling = null; document.getElementById("fName").value = ""; renderTable("fEditor", [{name:"", weight:0}], true); document.getElementById("fillingPreview").innerHTML = ""; }
+function editFilling(id) { let x = (db.fillings || []).find(x => x.id === id); if(!x) return; edit.filling = id; document.getElementById("fName").value = x.name; renderTable("fEditor", x.ingredients, true); document.getElementById("fillingPreview").innerHTML = `<div class="notice">目前編輯：<b>${esc(x.name)}</b></div>`; }
+function saveFilling() {
+  let name = document.getElementById("fName").value.trim(), ing = readTable("fEditor", true);
+  if(!name) return alert("請輸入配方名稱");
+  let x = { id: edit.filling || ('f_' + Math.random().toString(36).substr(2, 9)), name, ingredients: ing };
+  let i = (db.fillings || []).findIndex(y => y.id === x.id);
+  i >= 0 ? db.fillings[i] = x : db.fillings.push(x);
+  edit.filling = x.id; save(); renderAll(); editFilling(x.id); alert("配料已儲存！");
+}
+function deleteFilling() {
+  if(!edit.filling) return;
+  if(!confirm("確定要刪除此配料配方嗎？")) return;
+  db.fillings = db.fillings.filter(x => x.id !== edit.filling);
+  save(); renderAll(); newFilling(); alert("配方已刪除");
+}
+
+function selectProdForCalc(val) {
+  let p = (db.products || []).find(x => x.name === val);
+  if(p) { document.getElementById("prodCurrentId").value = p.id; calculateProd(); }
+  document.getElementById("prodSearch").value = "";
+}
+function buildProdTable(title, ingredients, reqWeight, isPct) {
+  if(!ingredients || !reqWeight) return '';
+  let sum = ingredients.reduce((a,b)=>a+(isPct?b.pct:b.weight),0);
+  let multiplier = isPct ? (reqWeight/(sum/100)) : (reqWeight/sum);
+  let rows = ingredients.map(x => {
+    let use = isPct ? (multiplier*x.pct/100) : (multiplier*x.weight);
+    return `<tr><td>${esc(x.name)}</td><td>${fmt(isPct?x.pct:x.weight)}${isPct?'%':'g'}</td><td><b>${fmt(use)} g</b></td></tr>`;
+  }).join("");
+  return `<div><h3>${title}</h3><div class="tablewrap"><table><thead><tr><th>材料</th><th>原比例</th><th>本批用量</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function calculateProd() {
+  let pid = document.getElementById("prodCurrentId").value;
+  let p = (db.products || []).find(x => x.id === pid);
+  if(!p) { document.getElementById("prodTables").innerHTML = "<div class='muted'>請選擇商品</div>"; return; }
+  let q = Math.max(1, Number(document.getElementById("prodQty").value) || 1);
+  let dReq = p.doughWeight * q, f1Req = (p.fill1Weight || 0) * q, f2Req = (p.fill2Weight || 0) * q;
+  let dr = (db.dough || []).find(x => x.id === p.doughId);
+  let f1r = (db.fillings || []).find(x => x.id === p.fill1Id);
+  let f2r = (db.fillings || []).find(x => x.id === p.fill2Id);
+
+  document.getElementById("mWeight").textContent = fmt(p.doughWeight + (p.fill1Weight || 0) + (p.fill2Weight || 0)) + "g";
+  document.getElementById("mDoughTotal").textContent = fmt(dReq) + "g";
+  document.getElementById("mFillTotal").textContent = fmt(f1Req + f2Req) + "g";
+
+  let html = `<div class="notice" style="margin-bottom:0">目標生產：<b>${esc(p.name)}</b> x ${q} 個</div><div class="grid">`;
+  html += buildProdTable(`產品配方｜${dr?.name||'無'}`, dr?.ingredients, dReq, true);
+  html += buildProdTable(`配料1｜${f1r?.name||'無'}`, f1r?.ingredients, f1Req, false);
+  html += buildProdTable(`配料2｜${f2r?.name||'無'}`, f2r?.ingredients, f2Req, false);
+  document.getElementById("prodTables").innerHTML = html + "</div>";
+}
+function confirmProductionAndDeduct() {
+  let pid = document.getElementById("prodCurrentId").value;
+  let p = (db.products || []).find(x => x.id === pid);
+  if(!p) return alert("請先選擇要生產的商品");
+  let q = Math.max(1, Number(document.getElementById("prodQty").value) || 1);
+
+  db.productionLogs.push({ id: 'log_' + Math.random().toString(36).substr(2, 9), date: "2026-09-03", productId: p.id, productName: p.name, qty: q });
+  save();
+  renderInventory();
+  alert(`已完成生產記錄 (${p.name} x ${q} 個)，庫存已自動扣除！`);
+}
+function printPDF() {
+  let p = (db.products || []).find(x => x.id == document.getElementById("prodCurrentId").value);
+  if(!p) return alert("請先選擇商品");
+  let q = Math.max(1, Number(document.getElementById("prodQty").value) || 1);
+  let w = window.open("", "_blank");
+  w.document.write(`<!doctype html><html lang="zh-Hant"><head><title>${esc(p.name)} 生產表</title><style>@page{size:A4;margin:15mm}body{font-family:Arial,sans-serif}h1{font-size:22px}h2{font-size:17px;margin-top:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:right}th:first-child,td:first-child{text-align:left}</style></head><body><h1>🥖 BabyWei Bakery 生產單</h1><h2>${esc(p.name)} x ${q} 個</h2>`);
+  w.document.write(document.getElementById("prodTables").innerHTML);
+  w.document.write(`<script>setTimeout(()=>window.print(),500)<\/script></body></html>`);
+  w.document.close();
+}
+
+function calcProductUnitCost(p) {
+  let cost = 0;
+  let addCost = (ingredients, reqWeight, isPct) => {
+    if(!ingredients || !reqWeight) return;
+    let sum = ingredients.reduce((a,b)=>a+(isPct?b.pct:b.weight),0);
+    let multiplier = isPct ? (reqWeight/(sum/100)) : (reqWeight/sum);
+    ingredients.forEach(x => {
+      let use = isPct ? (multiplier*x.pct/100) : (multiplier*x.weight);
+      cost += use * getCostPerG(x.name);
+    });
+  };
+  addCost((db.dough || []).find(x => x.id === p.doughId)?.ingredients, p.doughWeight, true);
+  addCost((db.fillings || []).find(x => x.id === p.fill1Id)?.ingredients, p.fill1Weight, false);
+  addCost((db.fillings || []).find(x => x.id === p.fill2Id)?.ingredients, p.fill2Weight, false);
+  return cost;
+}
+
+function addSaleRecord() {
+  let d = document.getElementById("saleDate").value;
+  let pName = document.getElementById("saleProductSearch").value;
+  let q = Number(document.getElementById("saleQty").value);
+  if(!d) return alert("請選擇日期");
+  let p = (db.products || []).find(x => x.name === pName);
+  if(!p) return alert("找不到該商品，請從選單中選擇正確名稱");
+
+  let unitCost = calcProductUnitCost(p);
+  db.sales.push({ id: 's_' + Math.random().toString(36).substr(2, 9), date: d, productId: p.id, productName: p.name, qty: q, unitCost, unitPrice: p.price || 0 });
+  save();
+  document.getElementById("saleProductSearch").value = "";
+  document.getElementById("saleQty").value = 1;
+  renderAllReports();
+  alert("已加入銷售紀錄！");
+}
+function deleteSale(id) {
+  if(!confirm("刪除這筆紀錄？")) return;
+  db.sales = db.sales.filter(x => x.id !== id);
+  save();
+  renderAllReports();
+}
+
+function renderAllReports() {
+  renderSalesTable();
+  renderExpenseTable();
+}
+
+function renderSalesTable() {
+  let start = document.getElementById("queryStart")?.value || "";
+  let end = document.getElementById("queryEnd")?.value || "";
+  let filtered = (db.sales || []).filter(s => (!start || !end) || (s.date >= start && s.date <= end));
+  filtered.sort((a,b) => b.date.localeCompare(a.date));
+
+  let totRev = 0, totCost = 0, totProfit = 0;
+  if(!filtered.length) {
+    document.getElementById("salesTable").innerHTML = `<tr><td colspan="8" style="text-align:center">此區間無出貨紀錄</td></tr>`;
+    document.getElementById("queryRev").textContent = "$0";
+    document.getElementById("queryCost").textContent = "$0";
+    document.getElementById("queryProfit").textContent = "$0";
+    return 0;
+  }
+
+  let html = filtered.map(s => {
+    let rev = s.qty * s.unitPrice, cost = s.qty * s.unitCost, profit = rev - cost;
+    totRev += rev; totCost += cost; totProfit += profit;
+    return `<tr><td>${esc(s.date)}</td><td>${esc(s.productName)}</td><td>${s.qty}</td><td>$${fmt(s.unitCost)}</td><td>$${fmt(s.unitPrice)}</td><td>$${fmt(rev)}</td><td class="${profit>=0?'profit-good':'profit-warn'}"><b>$${fmt(profit)}</b></td><td><button class="danger" onclick="deleteSale('${s.id}')">刪</button></td></tr>`;
+  }).join("");
+
+  document.getElementById("salesTable").innerHTML = html;
+  document.getElementById("queryRev").textContent = `$${fmt(totRev)}`;
+  document.getElementById("queryCost").textContent = `$${fmt(totCost)}`;
+  document.getElementById("queryProfit").textContent = `$${fmt(totProfit)}`;
+  return totRev;
+}
+
+function renderExpenseTable() {
+  let start = document.getElementById("queryStart")?.value || "";
+  let end = document.getElementById("queryEnd")?.value || "";
+  let filteredExp = (db.costDB || []).filter(x => x.purchaseDate && ((!start || !end) || (x.purchaseDate >= start && x.purchaseDate <= end)));
+  filteredExp.sort((a,b) => b.purchaseDate.localeCompare(a.purchaseDate));
+
+  let totExp = 0;
+  if(!filteredExp.length) {
+    document.getElementById("expenseTable").innerHTML = `<tr><td colspan="5" style="text-align:center">此區間無採購紀錄</td></tr>`;
+    document.getElementById("expCount").textContent = "0";
+    document.getElementById("expTotalAmt").textContent = "$0";
+    updateCashFlow(0, 0);
+    return 0;
+  }
+
+  let html = filteredExp.map(x => {
+    totExp += Number(x.price) || 0;
+    return `<tr><td>${esc(x.purchaseDate)}</td><td>${esc(x.name)}</td><td>${esc(x.brand||'')}</td><td>$${fmt(x.price)}</td><td>${fmt(x.weight)}g</td></tr>`;
+  }).join("");
+
+  document.getElementById("expenseTable").innerHTML = html;
+  document.getElementById("expCount").textContent = filteredExp.length;
+  document.getElementById("expTotalAmt").textContent = `$${fmt(totExp)}`;
+
+  let revText = document.getElementById("queryRev").textContent.replace(/[^0-9.-]+/g,"");
+  updateCashFlow(Number(revText) || 0, totExp);
+  return totExp;
+}
+
+function updateCashFlow(rev, exp) {
+  let netCash = rev - exp;
+  document.getElementById("cfRev").textContent = `$${fmt(rev)}`;
+  document.getElementById("cfExp").textContent = `$${fmt(exp)}`;
+  let netEl = document.getElementById("cfNet");
+  netEl.textContent = `$${fmt(netCash)}`;
+  netEl.className = netCash >= 0 ? "profit-good" : "profit-warn";
+}
+
+function exportToExcel() {
+  let start = document.getElementById("queryStart").value;
+  let end = document.getElementById("queryEnd").value;
+  let filtered = (db.sales || []).filter(s => (!start || !end) || (s.date >= start && s.date <= end));
+  if(!filtered.length) return alert("沒有銷售資料可供匯出");
+
+  let csv = "\uFEFF出貨日期,商品名稱,數量,單顆成本,單顆售價,總營收,總利潤\n";
+  filtered.forEach(s => {
+    let rev = s.qty * s.unitPrice, cost = s.qty * s.unitCost, profit = rev - cost;
+    csv += `${s.date},${s.productName},${s.qty},${s.unitCost.toFixed(1)},${s.unitPrice},${rev.toFixed(1)},${profit.toFixed(1)}\n`;
+  });
+
+  let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = `BabyWei_銷售報表_${start}_to_${end}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function calculateStats() {
+  let today = new Date("2026-09-03");
+  let currY = today.getFullYear(), currM = today.getMonth()+1, currQ = Math.ceil(currM/3);
+  let dStr = "2026-09-03";
+  let agg = { d:{r:0,p:0}, m:{r:0,p:0}, q:{r:0,p:0}, y:{r:0,p:0} };
+
+  (db.sales || []).forEach(s => {
+    let dDate = new Date(s.date);
+    let sy = dDate.getFullYear(), sm = dDate.getMonth()+1, sq = Math.ceil(sm/3);
+    let rev = s.qty * s.unitPrice, profit = rev - (s.qty * s.unitCost);
+    if(s.date === dStr) { agg.d.r += rev; agg.d.p += profit; }
+    if(sy === currY && sm === currM) { agg.m.r += rev; agg.m.p += profit; }
+    if(sy === currY && sq === currQ) { agg.q.r += rev; agg.q.p += profit; }
+    if(sy === currY) { agg.y.r += rev; agg.y.p += profit; }
+  });
+
+  const setStat = (id, data) => {
+    let pEl = document.getElementById(id+"P");
+    let rEl = document.getElementById(id+"R");
+    if(pEl) { pEl.textContent = `$${fmt(data.p)}`; pEl.className = data.p >= 0 ? "profit-good" : "profit-warn"; }
+    if(rEl) rEl.textContent = `營收 $${fmt(data.r)}`;
+  };
+  setStat("sDay", agg.d); setStat("sMonth", agg.m); setStat("sQuarter", agg.q); setStat("sYear", agg.y);
+}
+
+function resetData() {
+  if(confirm("確定要恢復範例資料嗎？")) {
+    db = JSON.parse(JSON.stringify(sample));
+    save();
+    edit = { dough: null, filling: null, product: null };
+    load();
+    showTab('ingredients', document.querySelectorAll('.tab')[0]);
+  }
+}
+
+window.onload = load;
+</script>
+</body>
+</html>
