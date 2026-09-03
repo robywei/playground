@@ -10,6 +10,8 @@ The format is based on:
 
 ### 📅 2026-09-03
 
+- **✨ Added** *(babywei-bakery)* 🎨 加入麵包圖示，`.app` 與瀏覽器分頁共用同一張 - ([983514c](https://github.com/robywei/playground/commit/983514c05108a53eca99fc431bbaf56217295574))
+
 - **🐛 Fixed** *(babywei-bakery)* 🐛 `$ARCH（` 讓 bash 把中文字首 byte 併進變數名 - ([52054d6](https://github.com/robywei/playground/commit/52054d670ba8a073f96d7889245c3c8ddc7a7d78))
 
 - **📚 Docs** *(babywei-bakery)* 📖 新增 `README.md`，交付支援 universal binary - ([76add03](https://github.com/robywei/playground/commit/76add034170728fdd520faccaddb456dcc48d7e2))
