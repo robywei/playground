@@ -54,13 +54,7 @@ func main() {
 	}
 }
 
-// resolveDataDir 決定資料目錄。
-//
-// BAKERY_DATA_DIR 優先 —— 開發時 binary 不在 .app 內，路徑推導不成立。
-// 否則由執行檔位置向上解析四層取得 "BabyWei Bakery/"：
-//
-//	BabyWei Bakery/BabyWei Bakery.app/Contents/MacOS/bakery
-//	→ MacOS → Contents → .app → BabyWei Bakery/
+// resolveDataDir 決定資料目錄。BAKERY_DATA_DIR 優先。
 func resolveDataDir() (string, error) {
 	if dir := os.Getenv("BAKERY_DATA_DIR"); dir != "" {
 		return dir, nil
@@ -73,12 +67,30 @@ func resolveDataDir() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("解析執行檔路徑: %w", err)
 	}
+	return dataDirFor(exe), nil
+}
+
+// dataDirFor 由執行檔位置推導資料目錄。抽成純函數以便測試。
+//
+// 兩種佈局：
+//
+//	交付：BabyWei Bakery/BabyWei Bakery.app/Contents/MacOS/bakery
+//	      → 往上四層 → BabyWei Bakery/data
+//	開發：babywei-bakery/bin/bakery
+//	      → 往上一層 → babywei-bakery/data
+//
+// 其他情況一律用執行檔所在目錄下的 data/。
+func dataDirFor(exe string) string {
 	dir := filepath.Dir(exe)
-	if filepath.Base(filepath.Dir(dir)) == "Contents" {
-		// 在 .app bundle 內：再往上三層到 BabyWei Bakery/
+	switch {
+	case filepath.Base(filepath.Dir(dir)) == "Contents":
+		// .app bundle 內：MacOS → Contents → .app → 外層目錄
 		dir = filepath.Dir(filepath.Dir(filepath.Dir(dir)))
+	case filepath.Base(dir) == "bin":
+		// 開發佈局：資料不該埋在 bin/ 裡，跟建置產物混在一起
+		dir = filepath.Dir(dir)
 	}
-	return filepath.Join(dir, "data"), nil
+	return filepath.Join(dir, "data")
 }
 
 // listen 從 basePort 起往後找一個可用的埠。

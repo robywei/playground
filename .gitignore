@@ -18,7 +18,7 @@ temp
 ## 使用者資料與自動備份，絕不進版控
 babywei-bakery/data/
 ## Go 建置產物
-babywei-bakery/bakery
+babywei-bakery/bin/
 babywei-bakery/release/
 ## 前端依賴
 node_modules/

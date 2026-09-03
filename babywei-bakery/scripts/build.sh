@@ -11,7 +11,8 @@ echo "==> 建置前端"
 (cd web && npm ci --silent && npm run build)
 
 echo "==> 建置 binary"
-go build -ldflags="-s -w" -o bakery .
+mkdir -p bin
+go build -ldflags="-s -w" -o bin/bakery .
 
-size_mb=$(echo "scale=1; $(stat -f %z bakery) / 1048576" | bc)
-echo "==> 完成: $ROOT/bakery (${size_mb} MB)"
+size_mb=$(echo "scale=1; $(stat -f %z bin/bakery) / 1048576" | bc)
+echo "==> 完成: $ROOT/bin/bakery (${size_mb} MB)"
