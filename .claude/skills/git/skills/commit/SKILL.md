@@ -10,7 +10,7 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
 
 > 🔁 本檔由 repo-template 管理：要改共用流程請改範本、發版後 `copier update`，**不要直接改這裡**
 > （直接改會被當成本地客製保留下來，從此和其他 repo 分岔）。只屬於本 repo 的規則寫在
-> [`.claude/overlays/git-commit.md`](../../../../overlays/git-commit.md)。
+> [`.claude/custom/git-commit.md`](../../../../custom/git-commit.md)。
 
 ## 檔案說明
 
@@ -19,8 +19,8 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
 
 ## 步驟 0：讀本 repo 專屬規則
 
-先讀 [`.claude/overlays/git-commit.md`](../../../../overlays/git-commit.md)，其中的規則與下列共用步驟**一起**適用。
-檔案不存在時**明確回報「找不到本 repo 的 overlay」**，不要靜默略過。
+先讀 [`.claude/custom/git-commit.md`](../../../../custom/git-commit.md)，其中的規則與下列共用步驟**一起**適用。
+檔案不存在時**明確回報「找不到本 repo 的 custom 規則檔」**，不要靜默略過。
 
 ## 執行步驟
 
@@ -41,7 +41,7 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
      - 🐛 邏輯：空值處理、邊界條件、錯誤處理、race condition
      - ⚡ 效能：N+1 查詢、無限迴圈風險、記憶體洩漏
      - 📝 風格：命名一致性、死碼、過度複雜
-     - 📌 本 repo 特有的高頻缺陷：見 overlay（步驟 0）
+     - 📌 本 repo 特有的高頻缺陷：見 custom 規則檔（步驟 0）
    - **處理方式**：小型（< 50 行）直接檢查；中型（50–200 行）逐檔案檢查；大型（> 200 行）啟動獨立的 review 子 agent
    - **阻擋條件**（發現以下問題必須修復後才能提交）：
      - 硬編碼的密碼、API key、token
@@ -57,7 +57,7 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
        - **root 目標 ≤ 250 行**（以 `wc -l CLAUDE.md` 實查）。超過就把細節外放到該目錄 `README.md` 或對應 skill，
          **不要兩邊各寫一份**（必然漂移）
        - ⚠️ 外放前先確認落點真的存在，否則是「刪掉」不是「外放」
-   - 本 repo 的文件落點（哪些目錄有 `README.md`、`docs/` 怎麼分）：見 overlay
+   - 本 repo 的文件落點（哪些目錄有 `README.md`、`docs/` 怎麼分）：見 custom 規則檔
 4. **建立 Git commit**：
    - 主旨用 Conventional Commits（`type(scope): 描述`），**主旨必須能獨立讀懂**
    - **body 寫清單**：細節留在 git，`git log --grep=<關鍵字>` / `-S` 搜得到

@@ -80,6 +80,16 @@ def config_limit():
     return int(m.group(1)) if m else 80
 
 
+def md013_disabled():
+    """設定檔明寫 `"MD013": false` 時回 True —— 此時 markdownlint 不會回報任何行長違規，
+    印「沒有違規（上限 80）」會誤導成「有在檢查、而且都合規」。"""
+    try:
+        text = CONFIG.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return re.search(r'"MD013"\s*:\s*false', text) is not None
+
+
 def md_files():
     """`lint.sh` 的 `list_files` 同款取法 —— 兩個旗標都是必要的，缺了會靜默漏檔。
 
@@ -214,6 +224,11 @@ def main():
     ## 要折它們就明確給路徑
     ap.add_argument("paths", nargs="*", help="只處理這些 .md（預設：與 lint.sh 相同的清單）")
     args = ap.parse_args()
+
+    ## 違規清單是問 markdownlint 拿的：規則停用時它永遠回 0 筆，帶 --limit 也偵測不到（--limit 只決定折行寬度）
+    if md013_disabled():
+        print(f"✓ MD013 已在 {CONFIG.name} 停用 —— 沒有行長上限，不需要折行")
+        return 0
 
     limit = args.limit or config_limit()
     hits = violations([str(pathlib.Path(p).resolve()) for p in args.paths])
