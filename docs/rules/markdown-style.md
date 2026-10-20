@@ -6,10 +6,10 @@
 —— **刻意只有這一份**。`globs`（檢查範圍）、`ignores`（排除）、`config`（規則）
 全在裡面，不另外放 `.markdownlint.jsonc` 或 `.markdownlintignore`。
 
-## 🔴 一律走 `./scripts/lint.sh md`，不要裸跑
+## 🔴 一律走 `./scripts/lint/lint.sh md`，不要裸跑
 
 ```sh
-./scripts/lint.sh md
+./scripts/lint/lint.sh md
 ```
 
 裸跑會踩到下面兩類靜默失敗。腳本的存在就是為了消掉它們：它一律 `cd` 到 repo 根，
@@ -49,14 +49,14 @@ cli v1 有同樣的問題。從 repo 根跑則正常通過。
 
 ## 🔴 別用 `tail` / `head` 看檢查結果
 
-2026-09-03 實測：`./scripts/lint.sh md | tail -2` 只顯示最後兩行，看起來像 2 個
+2026-09-03 實測：`./scripts/lint/lint.sh md | tail -2` 只顯示最後兩行，看起來像 2 個
 違規，實際有 **768 個**。這與本檔其他「假綠燈」同類 —— 你看到的不是全貌。
 
 要摘要就看規則分佈，不要截行：
 
 ```sh
-./scripts/lint.sh md 2>&1 | grep -oE 'MD[0-9]+/[a-z0-9-]+' | sort | uniq -c | sort -rn
-./scripts/lint.sh md 2>&1 | grep -c ' error '
+./scripts/lint/lint.sh md 2>&1 | grep -oE 'MD[0-9]+/[a-z0-9-]+' | sort | uniq -c | sort -rn
+./scripts/lint/lint.sh md 2>&1 | grep -c ' error '
 ```
 
 ## ⚠️ Go 程式碼區塊已豁免 MD010（硬 tab）
@@ -109,4 +109,4 @@ cli v1 有同樣的問題。從 repo 根跑則正常通過。
 
 ⚠️ 機器上另有 `markdownlint`（cli v1，v0.47.0）—— **不同的 binary、markdownlint 版本
 差 6 個 minor**。它有 cli2 沒有的規則（如 `MD060`），所以同一批檔案可能「裸跑一片紅、
-閘門全綠」。閘門的權威是 `./scripts/lint.sh md`。
+閘門全綠」。閘門的權威是 `./scripts/lint/lint.sh md`。

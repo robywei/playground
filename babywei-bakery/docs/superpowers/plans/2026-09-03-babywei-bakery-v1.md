@@ -23,7 +23,7 @@
 - **所有金額與重量用 `float64`**，克數與價格皆可為小數
 - **日期一律 `YYYY-MM-DD` 字串**，取當下日期用 `time.Now()`，**不可寫死**
 - **成本算法為全期加權平均** `Σ(price) / Σ(weight_g)`，隔離在 `internal/domain/cost.go` 單一函數
-- **所有 `.md` 須通過 `./scripts/lint.sh md`**（在 playground repo 根執行）
+- **所有 `.md` 須通過 `./scripts/lint/lint.sh md`**（在 playground repo 根執行）
 - **commit 走 Conventional Commits**，中文主旨、路徑用反引號，規範見 repo 根 `CLAUDE.md`
 
 ---

@@ -8,7 +8,7 @@
 // 這裡都能做（`config` 放規則、`ignores` 放排除），拆成多份只會讓
 // 「規則到底在哪」多一層查找。
 {
-  // 檢查範圍。走 `scripts/lint.sh` 時不必再帶參數。
+  // 檢查範圍。走 `scripts/lint/lint.sh` 時不必再帶參數。
   "globs": ["**/*.md"],
 
   // 相依套件自帶的 .md 不是我們的文件。markdownlint 不讀 .gitignore，

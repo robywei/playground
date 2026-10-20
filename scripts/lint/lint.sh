@@ -11,12 +11,12 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 usage() {
   cat <<'USAGE'
-用法: ./scripts/lint.sh [md|all]
+用法: ./scripts/lint/lint.sh [md|all]
 
   md    檢查所有 markdown（預設）
   all   同 md（目前只有 markdown 檢查項）
