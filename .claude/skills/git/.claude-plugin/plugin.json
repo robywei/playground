@@ -1,0 +1,10 @@
+{
+  "name": "git",
+  "version": "1.0.0",
+  "description": "Git 操作：提交流程（預設）",
+  "author": {
+    "name": "robywei",
+    "email": "robywei@gmail.com"
+  },
+  "homepage": "https://github.com/robywei/playground"
+}

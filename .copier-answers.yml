@@ -1,0 +1,12 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_commit: v0.0.2
+_src_path: git@github.com:robywei/repo-template.git
+components:
+- git_core
+- md_tools
+- vault_scripts
+git_extra_skills: []
+github_owner: robywei
+plugin_author_email: robywei@gmail.com
+plugin_author_name: robywei
+repo_name: playground
