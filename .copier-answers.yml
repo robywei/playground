@@ -4,7 +4,6 @@ _src_path: git@github.com:robywei/repo-template.git
 components:
 - git_core
 - md_tools
-- vault_scripts
 git_extra_skills: []
 github_owner: robywei
 plugin_author_email: robywei@gmail.com
