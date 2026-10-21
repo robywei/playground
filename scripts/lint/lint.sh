@@ -16,10 +16,11 @@ cd "$REPO_ROOT"
 
 usage() {
   cat <<'USAGE'
-用法: ./scripts/lint/lint.sh [all|md|trivy]
+用法: ./scripts/lint/lint.sh [all|md|shell|trivy]
 
   all    全部檢查（預設；pre-push 跑這個）
   md     檢查所有 markdown
+  shell  shellcheck（error 級）：進版控的 *.sh 與 githooks
   trivy  vuln / misconfig / secret（範本的 scripts/trivy/trivy-cli.sh repo）
 USAGE
 }
@@ -59,6 +60,27 @@ lint_md() {
   return $status
 }
 
+lint_shell() {
+  command -v shellcheck >/dev/null 2>&1 || {
+    echo "✗ 找不到 shellcheck" >&2
+    echo "  安裝: brew install shellcheck" >&2
+    return 127
+  }
+
+  local -a files=()
+  local f
+  while IFS= read -r -d '' f; do files+=("$f"); done < <(
+    git -c core.quotepath=false ls-files -z --cached --others --exclude-standard -- '*.sh' 'scripts/githooks/*'
+  )
+  # 假綠燈防線：一支腳本都沒找到不是通過
+  if [[ ${#files[@]} -eq 0 ]]; then
+    echo "✗ 沒有找到任何 shell 腳本 —— 這不是通過" >&2
+    return 1
+  fi
+  shellcheck -S error "${files[@]}" || return 1
+  echo "✓ shellcheck（error 級）通過（${#files[@]} 個腳本）"
+}
+
 lint_trivy() {
   # QUIET=true：有發現或 trivy 執行失敗都非 0（找不到 trivy 也擋，不是通過）
   QUIET=true "$REPO_ROOT/scripts/trivy/trivy-cli.sh" repo "$REPO_ROOT"
@@ -66,10 +88,12 @@ lint_trivy() {
 
 case "${1:-all}" in
   md) lint_md ;;
+  shell) lint_shell ;;
   trivy) lint_trivy ;;
   all)
     rc=0
     lint_md || rc=1
+    lint_shell || rc=1
     lint_trivy || rc=1
     exit "$rc"
     ;;
