@@ -160,7 +160,10 @@ esac
 if [ "${QUIET}" != true ] && [ "${KEV_EPSS:-true}" = true ] && [ "${MODE}" != conf ] && [ -s "${LOG_FILE}" ]; then
   # shellcheck source-path=SCRIPTDIR
   source ./kev-epss.sh
-  if ! kev_epss_fetch; then
+  ## 沒有 CVE 就不抓情資（約 20 MB）、不產生只有表頭的 CSV —— 那會讓「沒有東西要修」看起來像有明細可看
+  if ! grep -q 'CVE-[0-9]' "${LOG_FILE}"; then
+    msg "[INFO]" "${blue}" "掃描結果沒有 CVE，不做 KEV / EPSS 判讀"
+  elif ! kev_epss_fetch; then
     msg "[WARN]" "${yellow}" "情資取得失敗，本次沒有做 KEV / EPSS 判讀"
   else
     CSV="${LOG_FILE%.log}.enriched.csv"
