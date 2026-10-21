@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """把 MD013（行長）違規的 markdown 行折成多行，續行自帶正確前綴。
 
-本檔由 repo-template 管理（元件 `md_tools`）：要改請改範本、發版後 `copier update`，不要直接改這裡。
+本檔由 repo-template 管理（基礎層）：要改請改範本、發版後 `copier update`，不要直接改這裡。
 
 存在的理由：MD013 是 `.markdownlint-cli2.jsonc` 裡唯一**不可自動修**的規則
 （`markdownlint-cli2 --fix` 不處理它），而手動折行有四個會靜默改壞語意的陷阱，

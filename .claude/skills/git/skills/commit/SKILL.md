@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "Git 提交流程（**git domain 的預設情境**）：分析變更 → Code Review → 更新 README / CLAUDE → commit → push（不生成 CHANGELOG、也不詢問）。觸發：commit、提交、push、幫我送出變更、一筆還是拆多筆、distill 產出要不要併回、同一件事拆成好幾筆；沒有其他明確情境時一律走這支。"
+description: "Git 提交流程（**git domain 的預設情境**）：分析變更 → Code Review → 更新 README / CLAUDE → commit → push（不生成 CHANGELOG、也不詢問）。觸發：commit、提交、push、幫我送出變更、一筆還是拆多筆、distill 產出要不要併回、同一件事拆成好幾筆、`git status` 出現不是我這輪改的檔案、併行 agent 提交衝突、HEAD 跟這輪開頭記的不一樣、`[remote rejected]` cannot lock ref、pre-push 擋下但失敗的檢查不是我改的；沒有其他明確情境時一律走這支。"
 ---
 
 # Git 提交流程
@@ -34,7 +34,7 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
 
    - 出現「你不記得改過」的項目就**停下來問**：不要默默包進 commit（別人的變更會記在你的 commit message 下），
      也不要逕自還原或 `git clean`（可能刪掉對方正在做的事）。併發來源不限 Claude session，同機的人、部署 bot 都算
-   - ⚠️ 併發時不要用 `git stash`：會破壞對方的 staging
+   - ⚠️ 併發時不要用 `git stash`：會破壞對方的 staging；完整處理流程見 [`concurrent.md`](concurrent.md)
 2. **Code Review**（根據變更規模調整深度）
    - **檢查項目**：
      - 🔒 安全：硬編碼密碼/token、SQL injection、command injection、敏感資訊外洩
@@ -56,12 +56,14 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
        - 砍掉踩雷的編年史敘事（哪天、哪支腳本），**保留規則與失敗症狀**
        - **root 目標 ≤ 250 行**（以 `wc -l CLAUDE.md` 實查）。超過就把細節外放到該目錄 `README.md` 或對應 skill，
          **不要兩邊各寫一份**（必然漂移）
+       - 落點判準見 [`/archive:distill`](../../../archive/skills/distill/SKILL.md) 的 `claude-md.md`
        - ⚠️ 外放前先確認落點真的存在，否則是「刪掉」不是「外放」
    - 本 repo 的文件落點（哪些目錄有 `README.md`、`docs/` 怎麼分）：見 custom 規則檔
 4. **建立 Git commit**：
    - 主旨用 Conventional Commits（`type(scope): 描述`），**主旨必須能獨立讀懂**
    - **body 寫清單**：細節留在 git，`git log --grep=<關鍵字>` / `-S` 搜得到
-   - 🔴 **寫錯無法事後修**（push 後改 message ＝ 改寫歷史），只能在後續 commit 補說明
+   - 🔴 **寫錯無法事後修**（push 後改 message ＝ 改寫歷史，不做，理由見「注意事項」的機密那條），
+     只能在後續 commit 補說明
    - 🔴 **主旨與 body 之間必須空一行** —— 少了它 git 把**整段**（含 body 清單）當成主旨。
      `git commit -F - <<'EOF'` 時最容易漏 → commit 後先 `git log -1 --format=%s` 確認只有一行，
      **push 前**發現還能 `--amend`
@@ -105,14 +107,16 @@ git commit --fixup=<sha> && git rebase --autosquash --autostash origin/main  ## 
 
 `--autosquash` 不帶 `-i` 需 git ≥ 2.44。
 
-- 🔴 **已 push 就不併** —— 那是改寫已推送的歷史；只能獨立一筆，主旨寫明它補的是哪件事
-- 🔴 **範圍內夾著別的 agent 的 commit 就不 rebase** —— 會改掉它的 hash，對方下一步會以為 HEAD 被動過 → 改為獨立一筆
+- 🔴 **已 push 就不併** —— 那是改寫已推送的歷史；
+  只能獨立一筆，主旨寫明它補的是哪件事
+- 🔴 **範圍內夾著別的 agent 的 commit 就不 rebase** —— 會改掉它的 hash，對方下一步會以為 HEAD 被動過
+  （見 [`concurrent.md`](concurrent.md)）→ 改為獨立一筆
 - 併完 body 要補上新增的那幾項（`--amend` 時去掉 `--no-edit`；fixup 會被 squash 掉 message，事後 `--amend` 補）
 
 ### 為了能併回去：非 `/git` 觸發的 commit 可以先不 push
 
 事件處置中途自發的 commit（例：套用線上變更後立即入庫）**先只 commit**，push 留到對話收尾 ——
-收尾若有萃取知識的產出，才併得回去。
+收尾若跑 [`/archive:distill`](../../../archive/skills/distill/SKILL.md)，它的產出才併得回去。
 
 - 使用者叫 `/git` → 照常 commit + push（明確要求，不延後）
 - 常駐 agent 依它自己的 playbook，通常一律 commit + push，不適用延後
@@ -122,6 +126,10 @@ git commit --fixup=<sha> && git rebase --autosquash --autostash origin/main  ## 
 
 - Commit message 使用**繁體中文**
 - 確保不提交任何機密資訊（密碼、金鑰等）
+  - 🔴 **機密已經 commit 進去（尤其已 push）→ 立刻輪換那組憑證，不要靠改寫歷史清除**：既有的 clone、fork、CI 快取都還留著，
+    GitHub 上的舊 commit 在 GC 前仍可用網址直接打開 —— 改寫擋不住已外洩的副本，只會讓 CHANGELOG、文件裡引用的 SHA
+    全部指向不存在的 commit，而且不報錯。服務已退場時，改為確認那組密碼沒有被複用到別處
+  - 處置紀錄寫進 custom 規則檔時，**不要寫是哪個服務、殘留在哪幾個 commit**（等於做出一份「哪裡有舊憑證」的索引）
 - 🔴 **`git add` / `git commit` / `git push` 的 stderr 一律不遮**（要靜音只能靜 stdout 的 `-q`）
   - `git add -- <路徑A> <路徑B>` 只要**任一路徑在本 repo 不存在**、或該路徑**已經 staged 過且沒有新變更**，
     就回 `fatal: pathspec … did not match any files` 而**整個中止** —— 連存在的路徑也沒 stage。

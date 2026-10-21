@@ -1,0 +1,10 @@
+{
+  "name": "archive",
+  "version": "1.0.0",
+  "description": "對話收尾萃取：把驗證過的知識沉澱成 repo 可復用資源（skill / README / docs / CLAUDE.md）",
+  "author": {
+    "name": "robywei",
+    "email": "robywei@gmail.com"
+  },
+  "homepage": "https://github.com/robywei/playground"
+}
