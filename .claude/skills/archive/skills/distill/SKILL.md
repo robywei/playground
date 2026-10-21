@@ -52,7 +52,7 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
      - 完全重複 → 不新增
      - 類似但不完全相同 → **更新既有 skill**，擴充涵蓋範圍與 `description` 觸發詞
      - 相關但屬不同 domain → 加 cross-reference，不要複製貼上
-     - 確認不存在 → 才新建
+     - 確認不存在 → 先過 [`lifecycle.md`](../../../lifecycle.md) 的 🧹 退場判準（它其實是知識不是流程？只是薄指標？），都不是才新建
    - **docs / CLAUDE.md**：`grep -rn '<關鍵字>' --include='*.md' .`，有 → 更新該段落；沒有才新增。
      ⚠️ repo 可能有多份 `CLAUDE.md`，**全部都要 grep**，不能只看 root
    - 🔴 **這步不能用裸 `rg`** —— `rg` 預設跳過隱藏目錄，而 `.claude/` 就是隱藏目錄。實測同一個查詢
@@ -61,9 +61,10 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
    - 原則：**寧可更新一處變厚，不要散落成兩處講同件事**。既有說明「情境正確但缺通則」時，別再寫一份原理，
      只在該寫的地方補「規則本身 ＋ 指向既有說明的指標」
 3. **依規範產出**
-   - skill：`<domain>/skills/<skill>/SKILL.md` ＋ frontmatter `name` / `description`；新 domain 另需
-     `<domain>/.claude-plugin/plugin.json`。🔴 **新增 skill 後必須手動改該 domain `plugin.json` 的 `description`**
-     —— `claude plugin validate` 只驗 schema，沒有任何檢查會抓它漂移。新 skill 與 `plugin.json` 放同一個 commit
+   - skill：照 [`.claude/skills/README.md`](../../../README.md) 的佈局與新增步驟
+     （`<domain>/skills/<skill>/SKILL.md` ＋ frontmatter `name` / `description`；新 domain 另需 `<domain>/.claude-plugin/plugin.json`）。
+     🔴 **新增 skill 後必須手動改該 domain `plugin.json` 的 `description`** —— `claude plugin validate` 只驗 schema，
+     沒有任何檢查會抓它漂移。新 skill 與 `plugin.json` 放同一個 commit
    - docs / README / CLAUDE.md：遵守 markdownlint；事實附「為何 / 何時適用」，相對日期轉絕對日期
    - 規則寫在**觸發它的動作**那份文件，不是它描述的對象那份：見 [`claude-md.md`](claude-md.md)
    - **確保可被發現（不可跳過）**：新建的 README / docs 不能是孤兒檔 —— 在該目錄的 `CLAUDE.md`（沒有才退回 root）

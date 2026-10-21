@@ -1,0 +1,10 @@
+{
+  "name": "guard",
+  "version": "1.0.1",
+  "description": "Claude Code mod（hooks 模組，無 skill）：工具結果與其他對話列進 transcript 前遮蔽機密（GitHub / Slack / Cloudflare / Vault / JWT / PEM / 雲端 AccessKey Secret / URL 密碼等前綴或 key 名錨定格式，含大輸出落檔），遮蔽後附「下一步怎麼做」提示，擋下把遮蔽標記寫回的 Write / Edit / NotebookEdit / Bash / Monitor；擋寫回時附正確做法",
+  "author": {
+    "name": "robywei",
+    "email": "robywei@gmail.com"
+  },
+  "homepage": "https://github.com/robywei/playground"
+}

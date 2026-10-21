@@ -44,7 +44,8 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
      - 📌 本 repo 特有的高頻缺陷：見 custom 規則檔（步驟 0）
    - **處理方式**：小型（< 50 行）直接檢查；中型（50–200 行）逐檔案檢查；大型（> 200 行）啟動獨立的 review 子 agent
    - **阻擋條件**（發現以下問題必須修復後才能提交）：
-     - 硬編碼的密碼、API key、token
+     - 硬編碼的密碼、API key、token（guard 生效時 diff 裡的真機密顯示成遮蔽標記 `<redacted:FAMILY len=N>` ——
+       **看到標記＝命中**，不是「已處理」：檔案裡是真值）
      - 明顯的安全漏洞
      - 會導致服務中斷的邏輯錯誤
 3. **根據變更內容更新相關文檔**：
@@ -142,7 +143,8 @@ git commit --fixup=<sha> && git rebase --autosquash --autostash origin/main  ## 
   - 閘門突然對「我沒改過的檔案」報錯時，先找 index 裡已不存在的檔：
     `git ls-files --cached -- <路徑> | while read -r f; do [ -e "$f" ] || echo "$f"; done`
   - **補救**：`git add -A -- <路徑>`（帶 pathspec，不是裸 `git add -A`），git 會把內容相同的識別為 rename
-- 🔀 **搬檔 / 改名後批次替換路徑一定會漏三類**，改完逐類掃一次：
+- 🔀 **搬檔 / 改名後批次替換路徑一定會漏三類**，改完逐類掃一次
+  （替換用 [`scripts/tools/replace.py`](../../../../../scripts/tools/replace.py)，不要 `sed -i`；count 對了不代表那幾處都該改）：
 
   | 漏改類型 | 為什麼字串替換抓不到 | 怎麼找 |
   | --- | --- | --- |
