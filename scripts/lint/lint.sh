@@ -16,10 +16,11 @@ cd "$REPO_ROOT"
 
 usage() {
   cat <<'USAGE'
-用法: ./scripts/lint/lint.sh [md|all]
+用法: ./scripts/lint/lint.sh [all|md|trivy]
 
-  md    檢查所有 markdown（預設）
-  all   同 md（目前只有 markdown 檢查項）
+  all    全部檢查（預設；pre-push 跑這個）
+  md     檢查所有 markdown
+  trivy  vuln / misconfig / secret（範本的 scripts/trivy/trivy-cli.sh repo）
 USAGE
 }
 
@@ -58,8 +59,20 @@ lint_md() {
   return $status
 }
 
-case "${1:-md}" in
-  md | all) lint_md ;;
+lint_trivy() {
+  # QUIET=true：有發現或 trivy 執行失敗都非 0（找不到 trivy 也擋，不是通過）
+  QUIET=true "$REPO_ROOT/scripts/trivy/trivy-cli.sh" repo "$REPO_ROOT"
+}
+
+case "${1:-all}" in
+  md) lint_md ;;
+  trivy) lint_trivy ;;
+  all)
+    rc=0
+    lint_md || rc=1
+    lint_trivy || rc=1
+    exit "$rc"
+    ;;
   -h | --help | help) usage ;;
   *)
     echo "✗ 未知的檢查項: $1" >&2
