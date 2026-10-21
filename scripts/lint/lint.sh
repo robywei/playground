@@ -31,22 +31,24 @@ lint_md() {
   }
 
   local out status
-  # 不帶參數 —— 檢查範圍由 .markdownlint-cli2.jsonc 的 globs 決定
+  # 檢查範圍由本腳本給：進版控（含未追蹤但未 ignore）的 .md。設定檔刻意不設 globs，
+  # 才不會掃到 temp/ 等被 gitignore 的草稿。xargs 可能拆成多次呼叫 → 下面把每段的 Linting 數加總
   set +e
-  out="$(markdownlint-cli2 2>&1)"
+  out="$(git -c core.quotepath=false ls-files -z --cached --others --exclude-standard -- '*.md' \
+    | xargs -0 markdownlint-cli2 2>&1)"
   status=$?
   set -e
   printf '%s\n' "$out"
 
   # 假綠燈防線：exit 0 但一個檔案都沒檢查到
   local n
-  n="$(printf '%s\n' "$out" | sed -n 's/^Linting: \([0-9]*\) files\?$/\1/p' | tail -1)"
+  n="$(printf '%s\n' "$out" | sed -n 's/^Linting: \([0-9]*\) files\?$/\1/p' | awk '{s+=$1} END{if (NR) print s}')"
   if [[ -z "$n" ]]; then
     echo "✗ 輸出中找不到 'Linting: N files' —— 無法確認檢查真的執行過" >&2
     return 1
   fi
   if [[ "$n" -eq 0 ]]; then
-    echo "✗ Linting: 0 files —— glob 沒命中任何檔案，這不是通過" >&2
+    echo "✗ Linting: 0 files —— 沒有任何 .md 被檢查，這不是通過" >&2
     return 1
   fi
 
