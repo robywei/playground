@@ -10,7 +10,7 @@
 
 | 要做的事 | 先讀 |
 | --- | --- |
-| 寫或改任何 `.md` | [`docs/rules/markdown-style.md`](docs/rules/markdown-style.md)（**兩種假綠燈**、設定檔按 cwd 找、`--fix` 會靜默改壞） |
+| 寫或改任何 `.md` | 通用規則 [`.claude/rules/common/markdown.md`](.claude/rules/common/markdown.md)（範本管理，碰到 `.md` 時自動載入：假綠燈、設定檔按目錄找、`--fix` 會靜默改壞） |
 | 建 commit | 下方 📋 —— **主旨即 CHANGELOG 的唯一內容**，且事後無法修 |
 | 新增目錄 | 下方 📂 —— 全小寫 kebab-case |
 
@@ -78,4 +78,4 @@ git-cliff --config .cliff.toml -o CHANGELOG.md
 
 `superpowers` 的 `brainstorming` 在此 repo 適用（新專案一律走完整流程：問題 →
 方案比較 → spec → `writing-plans`）。`verification-before-completion` 同樣適用，
-且與 `docs/rules/markdown-style.md` 的「假綠燈」同源：**exit 0 不等於檢查過**。
+且與通用規則 `.claude/rules/common/evidence.md` 的「全綠只證明被執行到的分支沒事」同源：**exit 0 不等於檢查過**。
