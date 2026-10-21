@@ -22,7 +22,7 @@ plugin 化把撞名風險從「每個情境」收斂到「每個 domain」。被
 
 ## 改名 SOP
 
-🔴 **範本擁有的 domain（`git`、`archive`）與其中由範本提供的 skill，不可在本 repo 改名** ——
+🔴 **範本擁有的 domain（`git`、`archive`、`guard`）與其中由範本提供的 skill，不可在本 repo 改名** ——
 改名要在範本發版，所有使用端 `copier update` 一起跟。下面只適用本 repo 自己的 domain / skill。
 
 **改 skill 名**（`<plugin>:<old>` → `<plugin>:<new>`）：
@@ -86,12 +86,12 @@ skill 只會長不會縮的話，**常駐成本會被一批沒人叫的 `descrip
 **增刪任何 skill 後都要跑這段對帳**：
 
 ```bash
-## 左邊是 plugin.json 的自述，右邊是該 domain 實際有哪些 skill —— 人眼比對
+## 左邊是 plugin.json 的自述，右邊是該 domain 實際有哪些 skill —— 人眼比對（hooks-only plugin 沒有 skills/，印「（無）」）
 for D in .claude/skills/*/.claude-plugin/plugin.json; do
-  d=$(basename "$(dirname "$(dirname "$D")")")
-  echo "── $d"
+  p=$(dirname "$(dirname "$D")")
+  echo "── $(basename "$p")"
   python3 -c "import json;print('  說:',json.load(open('$D'))['description'])"
-  echo "  有: $(ls "$(dirname "$(dirname "$D")")/skills" 2>/dev/null | tr '\n' ' ')"
+  if [ -d "$p/skills" ]; then echo "  有: $(ls "$p/skills" | tr '\n' ' ')"; else echo "  有: （無）"; fi
 done
 ```
 

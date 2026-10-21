@@ -39,7 +39,7 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 - 🔁 **反向：要把 `temp/` 裡的既有檔案「納管」前，先確認它是不是殘留。** 被版控版本取代後舊檔仍留在本機，
   看起來像「一直沒納管」。先 `git log --oneline -S'<檔名>'`、`grep -rn '<檔名>' --include='*.md' .` ——
   查到已被取代 → 任務是**刪殘留**，不是重寫一份重複的
-- plugin 自帶忽略規則的工作目錄（例：`.superpowers/` 底下的 `.gitignore` 是 `*`）同理：一個專案跑完，
+- plugin 自帶忽略規則的工作目錄（例：底下的 `.gitignore` 是 `*`）同理：一個專案跑完，
   那批素材是**唯一**的過程紀錄 → 收尾時整理成一份結案報告放 `docs/history/`；素材與報告不同天時，
   **逐項標註交付後的漂移**，否則封存的是過時資訊
 
@@ -55,16 +55,12 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
      - 確認不存在 → 先過 [`lifecycle.md`](../../../lifecycle.md) 的 🧹 退場判準（它其實是知識不是流程？只是薄指標？），都不是才新建
    - **docs / CLAUDE.md**：`grep -rn '<關鍵字>' --include='*.md' .`，有 → 更新該段落；沒有才新增。
      ⚠️ repo 可能有多份 `CLAUDE.md`，**全部都要 grep**，不能只看 root
-   - 🔴 **這步不能用裸 `rg`** —— `rg` 預設跳過隱藏目錄，而 `.claude/` 就是隱藏目錄。實測同一個查詢
-     `grep -rl` 回 4 檔、`rg -l` 只回 1 檔 → 用 `rg` 去重會得到假的「不存在」，然後寫出第二份重複說明，
-     而**兩份都看起來很合理**。盤點一律 `grep -r` 或 `rg --hidden --no-ignore`；裸 `rg` 只用來找線索
+   - 🔴 盤點不用裸 `rg`（跳過 `.claude/` 這類隱藏目錄 → 假的「不存在」→ 寫出第二份重複說明），規則見 `.claude/rules/common/agent-env.md`
    - 原則：**寧可更新一處變厚，不要散落成兩處講同件事**。既有說明「情境正確但缺通則」時，別再寫一份原理，
      只在該寫的地方補「規則本身 ＋ 指向既有說明的指標」
 3. **依規範產出**
-   - skill：照 [`.claude/skills/README.md`](../../../README.md) 的佈局與新增步驟
-     （`<domain>/skills/<skill>/SKILL.md` ＋ frontmatter `name` / `description`；新 domain 另需 `<domain>/.claude-plugin/plugin.json`）。
-     🔴 **新增 skill 後必須手動改該 domain `plugin.json` 的 `description`** —— `claude plugin validate` 只驗 schema，
-     沒有任何檢查會抓它漂移。新 skill 與 `plugin.json` 放同一個 commit
+   - skill：照 [`.claude/skills/README.md`](../../../README.md) 的佈局與「新增 / 修改 skill」
+     —— 🔴 含手動更新該 domain `plugin.json` 的 `description`、與新 `SKILL.md` 放同一個 commit（沒有任何檢查會抓它漂移）
    - docs / README / CLAUDE.md：遵守 markdownlint；事實附「為何 / 何時適用」，相對日期轉絕對日期
    - 規則寫在**觸發它的動作**那份文件，不是它描述的對象那份：見 [`claude-md.md`](claude-md.md)
    - **確保可被發現（不可跳過）**：新建的 README / docs 不能是孤兒檔 —— 在該目錄的 `CLAUDE.md`（沒有才退回 root）
@@ -72,20 +68,17 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 4. **驗證**（避免寫進過時資訊）
    - 路徑 / 指令 / 旗標要對得上現況（實際 `ls` / 開檔確認）
    - 動到 skill → `claude plugin validate .claude/skills/<domain>`；動到 `.md` → `./scripts/lint/lint.sh md`
-   - 🔴 **要寫進文件的「驗證指令」，自己先跑一次並看輸出合不合理** —— 例如 `for kw in $(...)` 把含空白的
-     關鍵字切碎、碎片命中一切 → 輸出一片「命中」。沒跑就交付，等於把一個永遠全綠的假檢查固化進 repo
+   - 🔴 **要寫進文件的「驗證指令」，自己先跑一次並看輸出合不合理**（例：含空白的關鍵字被切碎、碎片命中一切 → 一片「命中」）。
+     沒跑就交付，等於把一個永遠全綠的假檢查固化進 repo
 5. 🔴 **改到的檔案裡有沒有「repo 不等於線上」的？有就要部署，否則等於沒改**
 
    distill 的預設心智是「寫文件」，很容易把**設定檔**也當文件改完就算。逐檔問一次「這個檔是不是某個線上物件的來源」：
 
-   | 形狀 | 例 | 生效方式 |
-   | --- | --- | --- |
-   | ConfigMap / Secret 的來源（`configMapGenerator`、`--from-file`） | 被掛進 pod 的設定檔、腳本 | 要**重新部署 / 覆蓋** |
-   | 執行時才 `git clone` 讀取的 | 排程任務每次拉 repo 讀的設定 | push 即生效 |
-   | 純文件（`README.md` / `CLAUDE.md` / `SKILL.md`） | —— | push 即可 |
+   - 被打包、掛載或複製到線上的設定檔與腳本（例：部署時才讀進去的設定）→ 要**重新部署 / 覆蓋**
+   - 執行時才從 repo 拉取讀取的（例：排程任務每次 clone 讀的設定）、純文件 → push 即生效
 
    漏掉時**完全無聲**：repo 看起來對、lint 全綠、線上照舊。部署方式去該目錄的 README 查（別自己拼），
-   部署後回頭 diff 線上與 repo，確認只差你改的那一段。
+   部署後回頭 diff 線上與 repo，確認只差你改的那一段。本 repo 有哪些這類檔：見 custom 規則檔
 6. **落點在哪個 repo**
    - 改到的內容屬於 **repo-template 擁有的檔**（看 `.copier-answers.yml` 的範本產出、或檔頭寫著「由 repo-template 管理」）
      → **改範本 repo、發版、各 repo `copier update`**，不要在本地改（本地改會被當成客製靜默保留，從此分岔）；

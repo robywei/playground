@@ -35,7 +35,7 @@ for d in .claude/skills/*/skills; do echo "$(basename "$(dirname "$d")"): $(ls "
 ```
 
 本檔與 root `CLAUDE.md` 都**不列 skill 清單**：session 啟動時 harness 已注入每支 skill 的完整 `description`，
-再手寫一份等於同一份知識存兩份。實證：手寫清單的 README 在後續新增 skill 時全部沒跟上，漏列的 skill 在清單上「不存在」。
+再手寫一份等於同一份知識存兩份 —— 後續新增的 skill 必然沒跟上，漏列的在清單上「不存在」。
 
 ### 範本擁有的 domain：`git`、`archive`、`guard`
 
@@ -93,7 +93,9 @@ for d in .claude/skills/*/skills; do echo "$(basename "$(dirname "$d")"): $(ls "
    - ⚠️ **`plugin validate` 的參數是 plugin 目錄路徑，不是 domain 名** —— `claude plugin validate git` 會報
      `No manifest found in directory`，因為它找的是 **CWD 下**的 `<參數>/.claude-plugin/plugin.json`
    - ⚠️ `plugin validate` 只看 frontmatter 與 manifest、markdownlint 只看格式，**兩者都不驗連結目標存不存在** ——
-     搬檔、改名後要另外確認相對連結（以檔案所在目錄解析），而且要掃全 repo，不能只掃 `.claude/skills/`
+     搬檔、改名後要另外確認相對連結（以檔案所在目錄解析；指令見
+     [`archive:distill` 的 `plan-archive.md`](archive/skills/distill/plan-archive.md)「逐條驗相對連結」），
+     而且要掃全 repo，不能只掃 `.claude/skills/`
 5. 🔴 **新 `SKILL.md` 與該 domain 的 `plugin.json` 在同一個 commit 提交**，別讓 plugin 的自述與實際內容在歷史裡錯開；
    提交走 [`/git:commit`](git/skills/commit/SKILL.md)
 6. 改動要確認生效，見下節
@@ -103,9 +105,13 @@ for d in .claude/skills/*/skills; do echo "$(basename "$(dirname "$d")"): $(ls "
 改完 skill / plugin 之後**什麼時候生效**，各版本、各介面的行為不同，文件記載也互相矛盾 ——
 **不要照任何一份記載推論，當場確認**。沒生效時的排除順序：
 
-1. **確認磁碟內容**：直接 `Read` 那份 `SKILL.md`，以磁碟上的檔案為準，不要照注入的文字做
-2. **終端機 CLI**：`/reload-plugins`（可帶 `--force`）
-3. **開新對話 / 重啟 session**
+1. 🔴 **工作區有沒有被信任**：沒接受信任的 repo，`.claude/skills/` 底下的 skill 與 mod **全部靜默不載入**
+   （不報錯；上層目錄已信任**不會繼承**；新 clone 的機器一定會碰到）。在 repo 根跑 `claude plugin list` 確認：
+   未信任時印 `… was skipped because this workspace was not trusted when plugins were scanned`，
+   信任後才會列出 `<domain>@skills-dir`。未信任 → 終端機 `cd <repo> && claude` 接受信任提示，再 `/reload-plugins` 或開新 session
+2. **確認磁碟內容**：直接 `Read` 那份 `SKILL.md`，以磁碟上的檔案為準，不要照注入的文字做
+3. **終端機 CLI**：`/reload-plugins`（可帶 `--force`）
+4. **開新對話 / 重啟 session**
 
 - 🚫 **`/reload-skills` 不能代替** —— 它只重掃 `SKILL.md`、不碰 plugin 子系統，對新增的 `plugin.json` 視而不見（回 `no changes`）
 - 🚫 **IDE 的「Open in Terminal」也不能代替** —— 那開的是**另一個獨立 session**，在裡面重載不影響原本的 session
@@ -124,15 +130,14 @@ for d in .claude/skills/*/skills; do echo "$(basename "$(dirname "$d")"): $(ls "
 | **裸檔名連結是搬檔最易漏的一類** | `](foo.md)` 沒有 `../` 前綴 → `grep '](\.\.'` 抓不到。要抓所有 `](...)` 才看得到 |
 | **共用前置放 `references/`，不要各 skill 複述** | 例：`<domain>/references/auth.md`（憑證載入、參數合法值）。複述必漂移 |
 | **本檔與 root `CLAUDE.md` 不列 skill 清單** | 見「有哪些 skill」；root 只留叫用慣例 `/<domain>:<skill>` 與本檔指標 |
-| **新 clone 的機器要先信任工作區** | 未信任時 `plugin list` 會印「... was not loaded because this workspace was not trusted」，**skill 靜默不存在**。接受 trust dialog 後重載 |
 | **`SKILL.md` 內文避免裸 `$0`～`$9`** | 見下節 |
 
 ### 帶 args 叫用時，內文的 `$N` 可能被替換
 
-帶 args 叫用 skill 時，內文的 `$0`～`$9` 會被替換成 args 依空白分詞後的第 N 個 token —— **原檔不變、只有載入後的呈現被改、不報錯**。
-`awk '{print $2}'` 可能變成 `awk '{print <某個 args 字詞>}'`。替換規則隨版本可能不同，以當場確認為準。
+帶 args 叫用 skill 時，內文的 `$0`～`$9` 會被替換成 args 依空白分詞後的第 N 個 token —— **原檔不變、只有載入後的呈現被改、不報錯**
+（`awk '{print $2}'` 可能變成 `awk '{print <某個 args 字詞>}'`；替換規則隨版本可能不同，以當場確認為準）。
 
-- **判準**：呈現的 code block 出現不該有的字（中文、與情境無關的 token）時，**先 `grep` 原檔對照**，原檔永遠是權威
-- 🔴 **反向更貴**：誤判成「skill 檔有 bug」而去修，是把正確的檔案改壞
+- **判準**：呈現的 code block 出現不該有的字時，**先 `grep` 原檔對照**，原檔永遠是權威 ——
+  🔴 誤判成「skill 檔有 bug」而去修，是把正確的檔案改壞
 - **寫 skill 時規避**：`awk '{print $NF}'`、`awk -v c=2 '{print $c}'`、`cut -d' ' -f2`。盤點現有的：
   `grep -rnE '\$[0-9]' --include='*.md' .claude/skills/`

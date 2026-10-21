@@ -29,6 +29,7 @@
 - `while read` 迴圈裡會讀 stdin 的指令（`ssh`、多數 CLI）補 `</dev/null`，否則吃掉剩下的輸入、只跑一輪
 - 🔴 **窮盡式盤點不要用裸 `rg`**（預設跳過隱藏目錄與被 ignore 的檔，`.claude/`、`.github/` 整批漏掉）→
   `rg --hidden --no-ignore`；`grep -r` 若被包成 wrapper 也可能套 `.gitignore`
+- `git grep` 預設只掃**已追蹤**的檔 → 盤點含新檔（還沒 `git add`）要加 `--untracked`，否則得到假的「沒有」
 - `git ls-files` 會把非 ASCII 檔名轉義成 octal → 餵給別的指令時用 `git -c core.quotepath=false ls-files -z`
 - **不要遮 stderr**（`2>/dev/null`）：權限錯誤與 `fatal` 會被讀成「零結果」或「成功」
 - 多帳號時不要 `gh auth switch`（全域、影響同機其他 agent）→ 單次指令帶 `GH_TOKEN=…`；git 操作走 SSH

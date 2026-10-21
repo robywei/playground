@@ -30,7 +30,7 @@ printf 'hv%s.%s\n' s A1b2C3d4E5A1b2C3d4E5A1b2C3d4
 | 模型看到的輸出 | 判讀 |
 | --- | --- |
 | `vault` 的遮蔽標記（長度 32） | ✅ 運作中 |
-| 原樣的 `hvs.A1b2…` | ❌ 沒載入 → 開新 session 再探測；仍失敗就在**不含 mod 的目錄**跑 `claude plugin test`（`no hooks module to load` ＝ mod 可以載入；`turned off` ＝ 被設定或遠端關閉），再用 `claude --debug-file <檔>` 找 `hooks module guard` |
+| 原樣的 `hvs.A1b2…` | ❌ 沒載入 → **先查工作區信任**（未信任時本 repo 的 skill 與 mod 全部靜默不載入，查法見 [`.claude/skills/README.md`](../README.md)「讓改動生效」）；再開新 session 探測；仍失敗就在**不含 mod 的目錄**跑 `claude plugin test`（`no hooks module to load` ＝ mod 可以載入；`turned off` ＝ 被設定或遠端關閉），再用 `claude --debug-file <檔>` 找 `hooks module guard` |
 
 探測失敗期間照散文規則自己防：不開 xtrace（`bash -x`、`set -x`）、不把機密印出來。
 
@@ -124,6 +124,5 @@ cp "$SP"/guard/hooks/*.ts .claude/skills/guard/hooks/        ## 都過了才一�
   例如 `url_password` 要的 `@host`）—— 各拼各的會讓自我檢查每個 session 都報假失敗、而單元測試一直是綠的
 - **發現漏網的格式**：`samples()` 或 `keyedSamples()` 加一筆 → 「一般內容不受影響」對照組補一筆相似但不該命中的反例 →
   效能組補一筆病態輸入 → `plugin test` → `fp-scan.mts`
-- 擋指令的規則改動後，對照組（不擋）要涵蓋「字串裡出現同樣的字」—— 誤擋會讓正常工作卡住
 - `tsconfig.json` 只給編輯器用（引擎不讀），它 `extends` 的 `.claude-plugin/types/` 是引擎在 session 載入 mod 時
   依當地 CLI 版本產生、自帶 `.gitignore` 的目錄；新 clone 還沒載入過時編輯器會報找不到型別，開一次 session 即可
