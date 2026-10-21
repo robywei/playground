@@ -57,8 +57,9 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
    - 🔴 **push 後寫錯無法修**（改 message ＝ 改寫歷史），只能在後續 commit 補說明
    - 🔴 **主旨與 body 之間必須空一行** —— 少了它 git 把**整段**（含 body 清單）當成主旨。
      `git commit -F - <<'EOF'` 時最容易漏 → commit 後先 `git log -1 --format=%s` 確認只有一行，**push 前**發現還能 `--amend`
-5. **推送到遠端**。`pre-push` hook 會跑 `scripts/lint/lint.sh`（本 repo 的檢查項見該腳本檔頭）
-   - 🚫 **被擋就修到過再推，不用跳過旗標**（含擋下原因與本次無關時，見 [`concurrent.md`](concurrent.md) §5）
+5. **推送到遠端**。`pre-push` hook 會跑 `scripts/lint/lint.sh`（基礎檢查在 `lib.sh`，本 repo 的檢查項見 `lint.sh`）
+   - push 前 `git config core.hooksPath` 不是 `scripts/githooks` → 先跑 `./scripts/githooks/install-hooks.sh`（只寫本 repo 設定）並告知使用者
+   - 🚫 **被擋就修到過再推，不用跳過旗標**（含擋下原因與本次無關時，見 [`concurrent.md`](concurrent.md) §5）；缺工具時見 `git.md`
    - 用自動修正（`--fix`）解格式問題時，⚠️ **它會靜默改壞內容，跑完必須 `git diff`**
    - push 後用 `git ls-remote origin refs/heads/main` 核對 SHA，**不要只信 `Everything up-to-date`**
    - 非 `/git` 觸發的事件中途 commit 可延後到收尾再推，見下方「一筆還是拆多筆」

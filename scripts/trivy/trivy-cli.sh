@@ -39,12 +39,12 @@ usage() {
   conf  <PATH>                  掃設定檔（IaC / manifest）；或設 CONF_PATH
   k8s   <CONTEXT|ENV> [FLAGS]   掃叢集 workload；ENV 需要本 repo 的 env.sh 對照（見 README.md）
 
-  QUIET=true   只在有發現時印輸出、有發現 rc=1（pre-push 用）
+  QUIET=true   只在有發現或失敗時印輸出；rc：0 乾淨／1 有發現／2 無法執行（pre-push 用）
   KEV_EPSS=false   非 QUIET 時不做 KEV / EPSS 判讀
 EOF
 }
 
-command -v trivy > /dev/null || { msg "[ERROR]" "${red}" "找不到 trivy（brew install trivy）—— 沒有掃描，不是通過"; exit 1; }
+command -v trivy > /dev/null || { msg "[ERROR]" "${red}" "找不到 trivy（brew install trivy）—— 沒有掃描，不是通過"; exit 2; }
 
 MODE="${1:-}"
 [ -n "${MODE}" ] || { usage; exit 0; }
@@ -61,20 +61,20 @@ LOG_FILE="${LOG_DIR}/trivy_${MODE}_$(date '+%Y%m%d-%H%M%S').log"
 
 resolve() { case "$1" in /*) printf '%s\n' "$1" ;; *) printf '%s\n' "${CALLER_DIR}/$1" ;; esac; }
 
-## run_scan <標籤> <trivy 子指令與參數…>：回傳 trivy 自己的 rc
+## run_scan <標籤> <trivy 子指令與參數…>：QUIET 時回 0 乾淨／1 有發現／2 無法執行；一般模式回 trivy 自己的 rc
 run_scan() {
   local label=$1 out rc
   shift
   if [ "${QUIET}" = true ]; then
     out=$(mktemp "${TMPDIR:-/tmp}/trivy-quiet.XXXXXX") || return 1
-    trivy "$@" --exit-code 1 > "${out}" 2>&1
+    ## 有發現用專屬退出碼 3，才分得出 trivy 自己失敗（FATAL 也是 1：漏洞庫下載失敗、cache lock…）
+    trivy "$@" --exit-code 3 > "${out}" 2>&1
     rc=$?
-    if [ "${rc}" -ne 0 ]; then
-      msg "[FAIL]" "${red}" "${label}：有發現或 trivy 執行失敗（rc=${rc}）"
-      cat "${out}"
-    else
-      msg "[ OK ]" "${green}" "${label}：沒有發現"
-    fi
+    case "${rc}" in
+      0) msg "[ OK ]" "${green}" "${label}：沒有發現" ;;
+      3) msg "[FAIL]" "${red}" "${label}：有發現" && cat "${out}" && rc=1 ;;
+      *) cat "${out}" && msg "[FAIL]" "${red}" "${label}：trivy 無法執行（rc=${rc}）—— 沒有掃描，不是通過" && rc=2 ;;
+    esac
     rm -f "${out}"
     return "${rc}"
   fi
@@ -104,6 +104,8 @@ k8s_context() {
 }
 
 RC=0
+## 多次掃描（image 多個映像）：「有發現」優先保留，不被後面的「無法執行」蓋掉（後者可用 SKIP_CHECKS 跳過，前者不行）
+keep_rc() { [ "${RC}" -eq 1 ] || RC=$1; }
 TARGET=""
 case "${MODE}" in
   repo)
@@ -119,7 +121,7 @@ case "${MODE}" in
         esac
       done < <(git -C "${TARGET}" ls-files --others --ignored --exclude-standard --directory -z)
     fi
-    run_scan "repo ${TARGET}" repo "${COMMON[@]}" "${ARGS[@]}" "${TARGET}" || RC=$?
+    run_scan "repo ${TARGET}" repo "${COMMON[@]}" "${ARGS[@]}" "${TARGET}" || keep_rc $?
     ;;
   image)
     IMAGES=("$@")
@@ -128,13 +130,13 @@ case "${MODE}" in
     fi
     [ "${#IMAGES[@]}" -gt 0 ] || { msg "[ERROR]" "${red}" "要給映像名稱，或設定 REGISTRY 與 TAG_LIST"; usage; exit 1; }
     for img in "${IMAGES[@]}"; do
-      run_scan "image ${img}" image "${COMMON[@]}" "${img}" || RC=$?
+      run_scan "image ${img}" image "${COMMON[@]}" "${img}" || keep_rc $?
     done
     ;;
   conf)
     [ -n "${1:-${CONF_PATH:-}}" ] || { msg "[ERROR]" "${red}" "要給路徑，或設定 CONF_PATH"; usage; exit 1; }
     TARGET=$(resolve "${1:-${CONF_PATH}}")
-    run_scan "conf ${TARGET}" config "${COMMON[@]}" "${TARGET}" || RC=$?
+    run_scan "conf ${TARGET}" config "${COMMON[@]}" "${TARGET}" || keep_rc $?
     ;;
   k8s)
     [ -n "${1:-}" ] || { msg "[ERROR]" "${red}" "要給 kube context 或環境名"; usage; exit 1; }
@@ -143,7 +145,7 @@ case "${MODE}" in
     ## 預設範圍：長駐 workload 的 CRITICAL；不起 node-collector（它建的 Job 沒有回收機制，中斷就永久殘留）。
     ## --report all 才有逐筆 CVE（summary 沒有，KEV/EPSS 會抽到 0 筆）。後面的參數可覆寫這些預設。
     run_scan "k8s ${TARGET}" k8s "${COMMON[@]}" --report all --scanners vuln,misconfig,secret -s CRITICAL \
-      --disable-node-collector --include-kinds Deployment,StatefulSet,DaemonSet "$@" "${TARGET}" || RC=$?
+      --disable-node-collector --include-kinds Deployment,StatefulSet,DaemonSet "$@" "${TARGET}" || keep_rc $?
     ;;
   -h | --help | help)
     usage

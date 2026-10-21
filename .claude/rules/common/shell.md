@@ -19,6 +19,8 @@ paths: ["**/*.sh", "**/githooks/*"]
 - 錯誤訊息、說明文字裡別沿用 markdown 的反引號 —— 在雙引號內會被當成命令替換**真的執行** → 純文字用單引號
 - 含 `\n` 的 JSON 交給下一個指令用 `printf '%s\n'`，不用 `echo`；從 JSON 取欄位一律 `jq`，不要 `grep` 排版
 - source 或呼叫同 repo 的檔用絕對路徑：`SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"`，不要裸 `cd foo`
+- 暫存、快取、log 放 `${TMPDIR:-/tmp}` 或 `mktemp`；共用 `/tmp` 底下名稱固定的檔**不可 `source`／`eval`**（同機別的使用者能先放好內容）
+  → 狀態檔用 `sed -E` 只取格式正確的值，快取目錄用 `umask 077` 建、`[ -O <目錄> ]` 確認是自己的
 
 ## `set -euo pipefail` 的陷阱
 

@@ -25,7 +25,8 @@ REGISTRY=nginx TAG_LIST="1.26 1.27" ./scripts/trivy/trivy-cli.sh image
 QUIET=true ./scripts/trivy/trivy-cli.sh repo           # 閘門模式
 ```
 
-- **退出碼**：`QUIET=true` 時有發現＝1、乾淨＝0（trivy 本身失敗也非 0，輸出會印出來）。
+- **退出碼**：`QUIET=true` 時乾淨＝0、有發現＝1、無法執行＝2（找不到 trivy、漏洞庫下載失敗、cache lock…；輸出會印出來）。
+  `lint.sh` 靠這個區分：2 屬於「跑不起來」，使用者可用 `SKIP_CHECKS=trivy` 明確跳過；1 不行，要逐筆寫進 `.trivyignore.yaml`。
   一般模式是報表用途，**有發現也是 0**，只反映 trivy 有沒有執行成功 → 要當檢查用一律帶 `QUIET=true`
 - **log**：一般模式每次寫一份 `$TMPDIR/trivy/trivy_<模式>_<時間>.log`（沒有 `TMPDIR` 時是 `/tmp`；`TRIVY_LOG_DIR` 可改）
 - **k8s**：參數是 kube context 就直接交給 trivy，**不會**切換你目前的 context；

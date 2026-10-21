@@ -1,12 +1,35 @@
 #!/usr/bin/env bash
-# pre-push：跑本 repo 的完整檢查，任一項失敗就擋下 push
+# pre-push：跑本 repo 的完整檢查（scripts/lint/lint.sh 不帶參數），任一項失敗就擋下 push
 #
-# 由 repo-template 管理（基礎層）。檢查內容在 scripts/lint/lint.sh（各 repo 自己維護）；
-# 約定：lint.sh 不帶參數＝完整檢查。
-# 啟用：git config core.hooksPath scripts/githooks（每個 clone 各做一次）
-LINT="$(git rev-parse --show-toplevel)/scripts/lint/lint.sh"
-if [ ! -x "$LINT" ]; then
+# 由 repo-template 管理（基礎層）。基礎檢查在 scripts/lint/lib.sh（範本擁有），repo 專屬檢查在 lint.sh（repo 擁有）。
+# 啟用：./scripts/githooks/install-hooks.sh（每個 clone 一次）
+# 缺工具、確定先不裝：SKIP_CHECKS=<項目,…> git push —— 只對跑不起來有效，有發現要逐筆處理（見 lib.sh 檔頭）
+
+# VSCode 等 GUI client 的 PATH 常沒有 Homebrew → 缺工具即失敗的前提下會誤擋；加在最後，不改變使用者原本的優先順序
+export PATH="${PATH}:/opt/homebrew/bin:/usr/local/bin"
+
+ROOT="$(git rev-parse --show-toplevel)" || exit 1
+LINT="${ROOT}/scripts/lint/lint.sh"
+if [ ! -x "${LINT}" ]; then
   echo "pre-push：找不到可執行的 scripts/lint/lint.sh —— 擋下 push（不是通過）" >&2
   exit 1
 fi
-exec "$LINT"
+
+REPORT="$(mktemp)" || exit 1
+trap 'rm -f "${REPORT}"' EXIT
+
+# hook 的 stdin 是要推的 ref 清單，不交給 lint
+LINT_REPORT="${REPORT}" "${LINT}" < /dev/null || exit 1
+
+# 基礎檢查確實有執行：lint.sh 沒有 source lib.sh、沒以 lint_main 收尾時報告是空的
+BASES="$(sed -n 's/^base //p' "${REPORT}")"
+if [ -z "${BASES}" ]; then
+  echo "pre-push：lint.sh 沒有回報基礎檢查 —— 它要 source scripts/lint/lib.sh 並以 lint_main 收尾。擋下 push" >&2
+  exit 1
+fi
+for name in ${BASES}; do
+  if ! command -p grep -qx "ran ${name}" "${REPORT}"; then
+    echo "pre-push：基礎檢查 ${name} 沒有執行 —— 擋下 push" >&2
+    exit 1
+  fi
+done
