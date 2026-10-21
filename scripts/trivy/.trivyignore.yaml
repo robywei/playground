@@ -1,0 +1,31 @@
+# trivy 忽略清單（官方 .trivyignore.yaml 格式；trivy-cli.sh 以 --ignorefile 載入）
+#
+# 由 repo-template 產生一次，之後歸本 repo 維護，範本 update 不會覆蓋。
+#
+# 每一筆都要寫 statement（為什麼可以忽略），能限定範圍就加 paths。加之前先確認三件事，否則是把問題藏起來：
+#   1. 真的沒有修復版本（不是「升級麻煩」）
+#   2. 本 repo 沒有用到有問題的那段程式路徑
+#   3. 不在 KEV 裡（trivy-cli.sh 非 QUIET 模式會印出判讀）
+#
+# ⚠️ 副檔名決定解析器：存成 .yaml 以外的名字（例 .yaml.new）會被當成舊式純文字清單，每行都不匹配 → 零忽略、零錯誤訊息
+# ⚠️ 空的 id 而且不加 paths ＝ 整份掃描結果歸零、沒有任何警告；id 不支援萬用字元（"*"、KSV-* 都無效）
+#
+# 範例：
+#   vulnerabilities:
+#     - id: CVE-2023-29491
+#       paths:
+#         - "web/package-lock.json"
+#       statement: 只在建置期使用、上游無修復版本
+#       expired_at: 2026-12-31
+#   misconfigurations:
+#     - id: DS-0026
+#       statement: (LOW) 本 repo 的映像由平台健康檢查，不在 Dockerfile 設 HEALTHCHECK
+#   secrets:
+#     - id: generic-api-key
+#       paths:
+#         - "docs/examples/*.md"
+#       statement: 文件裡的示範假值
+
+vulnerabilities: []
+misconfigurations: []
+secrets: []
