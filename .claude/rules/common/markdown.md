@@ -14,6 +14,8 @@ paths: ["**/*.md"]
   會噴一片 MD013；markdownlint 也不驗連結目標存不存在
 - 🔴 看 `Linting: N files` 對帳檔案數 —— `Linting: 0 files` 照樣 exit 0，是假綠燈；
   `Summary: 0 issues in 0 files` 才是「檢查過且乾淨」
+- 🔴 **設定檔是從目前目錄往上找**：在子目錄跑 markdownlint，找不到設定就靜默改用預設值（例如 MD013 變回 80），
+  兩邊都不報「設定沒載入」；cli2 在子目錄不帶參數則只印用法、一個檔都沒檢查 → 一律從 repo 根跑
 - 不要自己用 `awk length` 量行長（數的是位元組，中文溢報約 3 倍）→ 行長只信 markdownlint
 - IDE 報錯而 `lint.sh md` 全綠時，先看磁碟上那一行 —— 編輯器 buffer 可能停在檔案被外部覆寫之前
 

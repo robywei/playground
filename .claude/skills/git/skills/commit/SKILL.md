@@ -132,7 +132,7 @@ git commit --fixup=<sha> && git rebase --autosquash --autostash origin/main  ## 
     全部指向不存在的 commit，而且不報錯。服務已退場時，改為確認那組密碼沒有被複用到別處
   - 處置紀錄寫進 custom 規則檔時，**不要寫是哪個服務、殘留在哪幾個 commit**（等於做出一份「哪裡有舊憑證」的索引）
 - 🔴 **`git add` / `git commit` / `git push` 的 stderr 一律不遮**（要靜音只能靜 stdout 的 `-q`）
-  - `git add -- <路徑A> <路徑B>` 只要**任一路徑在本 repo 不存在**、或該路徑**已經 staged 過且沒有新變更**，
+  - `git add -- <路徑A> <路徑B>` 只要**任一路徑在工作區不存在**（含已 `git rm`、被 `copier update` 刪掉的檔 —— 它們只剩 staged 的刪除），
     就回 `fatal: pathspec … did not match any files` 而**整個中止** —— 連存在的路徑也沒 stage。
     接著 `git commit` 印 `no changes added to commit`、`git push` 印 `Everything up-to-date`，**整串看起來像提交成功**
   - 跨 repo 批次提交時，pathspec 逐 repo 給（只列該 repo 真的有的路徑），commit 後**逐 repo 核對**
