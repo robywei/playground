@@ -1,20 +1,30 @@
-## basic ##
+## ---------------------------------------------------------------------------
+## 基線：由 repo-template 管理（基礎層）—— 要改請改範本、發版後 copier update
+## ⚠️ 基線不可忽略任何範本會產生的檔案：被忽略的檔案不進版控，換一份 clone 就消失、update 也補不回來
+## ---------------------------------------------------------------------------
 **/.DS_Store
 .vscode
 temp
-.scratch
 *.swp
 
-## 腳本就地編輯的中繼檔（sed -i.bak / trap 還原用的 .orig）
-## 正常情況下腳本自己會清掉；被中斷時殘留，不該進版控
+## Python 產物
+__pycache__/
+*.pyc
+
+## 腳本就地編輯的中繼檔（sed -i.bak / trap 還原用的 .orig）—— 被中斷時殘留，不該進版控
 *.bak
 *.orig
+
+## Claude Code 的本機檔
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+## ---------------------------------------------------------------------------
+## 本 repo 專屬：寫在這一段之後（update 的三方合併會保留，基線之後的變更也合得進來）
+## ---------------------------------------------------------------------------
+.scratch
 
 ## changelog 生成設定：本 repo 是臨時測試用，刻意不納入版控 ——
 ## k8s-infra 的每日 changelog 排程以「.cliff.toml 有被 git 追蹤」為納入條件，
 ## 追蹤它會讓那支排程每天對本 repo 報 ERROR（這裡沒有 scripts/changelog/generate.sh）
 .cliff.toml
-
-## Claude Code ##
-.claude/settings.local.json
-.claude/scheduled_tasks.lock

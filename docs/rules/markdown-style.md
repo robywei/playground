@@ -3,8 +3,9 @@
 寫或改本 repo 任何 `.md` 之前讀這份。
 
 規則的 source of truth 是 [`.markdownlint-cli2.jsonc`](../../.markdownlint-cli2.jsonc)
-—— **刻意只有這一份**。`globs`（檢查範圍）、`ignores`（排除）、`config`（規則）
-全在裡面，不另外放 `.markdownlint.jsonc` 或 `.markdownlintignore`。
+—— 由 repo-template 管理（各 repo 共用同一份標準規則），**不要直接改**，要改請改範本。
+設定檔**刻意不設 `globs`**：檢查範圍由 `scripts/lint/lint.sh` 用 `git ls-files` 給
+（進版控、含未追蹤但未 ignore 的 `.md`），才不會掃到 `temp/` 等被 gitignore 的草稿。
 
 ## 🔴 一律走 `./scripts/lint/lint.sh md`，不要裸跑
 
@@ -40,7 +41,7 @@ usage，**沒有任何可比對的字串**。這是選 cli2 的其中一個理�
 markdownlint-cli2 'docs/**/*.md'   ## → 19 筆 MD013
 ```
 
-而 `MD013` 在設定檔裡是 `false`。原因是該子目錄下沒有設定檔，工具往上找的起點是
+而設定檔的 `MD013` 上限是 120（當時是停用）。原因是該子目錄下沒有設定檔，工具往上找的起點是
 cwd 而非 repo 根，於是**靜默改用預設值**，且兩邊都不報「設定沒載入」。
 
 cli v1 有同樣的問題。從 repo 根跑則正常通過。
@@ -88,7 +89,7 @@ cli v1 有同樣的問題。從 repo 根跑則正常通過。
 
 | 規則 | 內容 |
 | --- | --- |
-| MD013 | **已停用** —— 中文散文採軟換行，一個段落一行，不手動斷行（理由見設定檔註解） |
+| MD013 | 行長上限 120（程式碼區塊與表格豁免）。長行用 `./scripts/lint/md-wrap.py` 折（預設 dry-run，加 `--apply` 才寫檔）—— 它避開了手動折行會靜默改壞語意的陷阱 |
 | MD022 | 標題前後需空行 |
 | MD031 | 程式碼圍欄前後需空行 |
 | MD032 | 清單前後需空行 |

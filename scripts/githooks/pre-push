@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# pre-push：跑本 repo 的完整檢查，任一項失敗就擋下 push
+#
+# 由 repo-template 管理（基礎層）。檢查內容在 scripts/lint/lint.sh（各 repo 自己維護）；
+# 約定：lint.sh 不帶參數＝完整檢查。
+# 啟用：git config core.hooksPath scripts/githooks（每個 clone 各做一次）
+LINT="$(git rev-parse --show-toplevel)/scripts/lint/lint.sh"
+if [ ! -x "$LINT" ]; then
+  echo "pre-push：找不到可執行的 scripts/lint/lint.sh —— 擋下 push（不是通過）" >&2
+  exit 1
+fi
+exec "$LINT"
