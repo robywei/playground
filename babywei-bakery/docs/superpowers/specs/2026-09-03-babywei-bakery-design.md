@@ -8,7 +8,8 @@
 
 `templates/index.html` 是一份可運作的單檔原型，涵蓋麵包店的進貨成本、原料庫存、配方管理、生產換算與利潤報表。它已經驗證了領域邏輯與介面流程，但有兩個根本問題：
 
-1. **資料不保存**。標題與介面徽章宣稱「Google 試算表雲端同步版」，但程式碼中沒有任何 `fetch`，持久化只有 `localStorage.getItem("babywei_local")`。Safari 在 7 天無互動後會清除 localStorage，使用者清瀏覽資料也會全毀，且無法備份。那個「雲端同步就緒 ☁️」徽章是寫死的裝飾字串。
+1. **資料不保存**。標題與介面徽章宣稱「Google 試算表雲端同步版」，但程式碼中沒有任何 `fetch`，持久化只有 `localStorage.getItem("babywei_local")`。
+   Safari 在 7 天無互動後會清除 localStorage，使用者清瀏覽資料也會全毀，且無法備份。那個「雲端同步就緒 ☁️」徽章是寫死的裝飾字串。
 2. **領域邏輯無法測試**。成本、庫存、利潤三項計算全部埋在 DOM 操作中（例如 `calculateProd()` 一邊計算一邊組 `innerHTML`），共 34 個全域函數搭配 inline `onclick`。
 
 本專案將它改造成可交付、資料可靠保存的本地應用程式。
@@ -46,11 +47,20 @@
 
 ### 4.1 選型依據（實測）
 
-**為什麼不用系統 Python**：`/usr/bin/python3` 是 118,640 bytes 的 shim，連結 `libxcselect.dylib`，內部識別為 `com.apple.dt.xcode_select.tool-shim-public`。它解析到 `/Library/Developer/CommandLineTools/.../Python3.framework/Versions/3.9/bin/python3`，也就是**隨 Xcode Command Line Tools 而來的 Python 3.9.6**，並非 macOS 本身提供。在未安裝 CLT 的 Mac 上執行 `python3` 會觸發「需要安裝命令列開發者工具」對話框（1–2 GB 下載），直接違背「解壓即可執行」。此外 Python 3.9 已於 2025-10 終止安全支援，隨附的 pip 為 2021 年的 21.2.4，且 Apple 已標示該 Python 僅供 CLT 用途、不保證未來版本繼續提供。
+**為什麼不用系統 Python**：`/usr/bin/python3` 是 118,640 bytes 的 shim，連結 `libxcselect.dylib`，
+內部識別為 `com.apple.dt.xcode_select.tool-shim-public`。
+它解析到 `/Library/Developer/CommandLineTools/.../Python3.framework/Versions/3.9/bin/python3`，
+也就是**隨 Xcode Command Line Tools 而來的 Python 3.9.6**，並非 macOS 本身提供。在未安裝 CLT 的 Mac 上執行 `python3` 會觸發「需要安裝命令列開發者工具」
+對話框（1–2 GB 下載），直接違背「解壓即可執行」。此外 Python 3.9 已於 2025-10 終止安全支援，隨附的 pip 為 2021 年的 21.2.4，且 Apple 已標示該 Python 僅供 CLT 用途、
+不保證未來版本繼續提供。
 
-**為什麼不用 Node**：可行但代價高。Homebrew 安裝的 `node` 是 50 KB shim，`otool -L` 顯示其動態連結 20 餘個 `/opt/homebrew/opt/*` dylib，不可搬移；必須改用 nvm 或官方 tarball 的 binary（僅依賴 `/System/Library` 與 `/usr/lib/libSystem`，可搬移）。但該 binary 為 116.3 MB（zip -9 後 37.3 MB），且需額外的 launcher 腳本與健康檢查輪詢。
+**為什麼不用 Node**：可行但代價高。Homebrew 安裝的 `node` 是 50 KB shim，`otool -L` 顯示其動態連結 20 餘個 `/opt/homebrew/opt/*` dylib，不可搬移；
+必須改用 nvm 或官方 tarball 的 binary（僅依賴 `/System/Library` 與 `/usr/lib/libSystem`，可搬移）。但該 binary 為 116.3 MB（zip -9 後 37.3 MB），
+且需額外的 launcher 腳本與健康檢查輪詢。
 
-**為什麼選 Go**：實測建置一份 `net/http` + `modernc.org/sqlite` + `embed.FS` 的服務，得到 7.7 MB binary（zip -9 後 3.3 MB），僅依賴系統框架，且 Go 在 darwin/arm64 自動 ad-hoc 簽章（`flags=0x20002(adhoc,linker-signed)`），這在 Apple Silicon 上是執行的必要條件。交付物塌縮為單一檔案，使用者的 Mac 不需要任何預裝執行環境。
+**為什麼選 Go**：實測建置一份 `net/http` + `modernc.org/sqlite` + `embed.FS` 的服務，得到 7.7 MB binary（zip -9 後 3.3 MB），僅依賴系統框架，
+且 Go 在 darwin/arm64 自動 ad-hoc 簽章（`flags=0x20002(adhoc,linker-signed)`），這在 Apple Silicon 上是執行的必要條件。交付物塌縮為單一檔案，
+使用者的 Mac 不需要任何預裝執行環境。
 
 功能面驗證（同一份測試程式）：SQLite 版本 3.53.4、`journal_mode` 預設 `delete`、`VACUUM INTO` 可用、交易 rollback 正常、`embed.FS` 靜態檔服務正常。
 
@@ -68,7 +78,9 @@
 
 ### 5.1 開發 repo
 
-專案位於 playground repo 下的 `babywei-bakery/` 子目錄，前端與後端各有獨立目錄。目錄名採全小寫 kebab-case：`web/package.json` 的 `name` 欄位不允許大寫（npm 對新套件名一律拒絕），Go module path 中的大寫字母會在 module cache 被轉義為 `!` + 小寫，且混用大小寫的路徑在不分大小寫的 macOS 與分大小寫的 CI 之間是 git 的常見地雷。此命名僅適用於原始碼；交付給使用者的 bundle 仍為 `BabyWei Bakery.app`（見 5.2）。
+專案位於 playground repo 下的 `babywei-bakery/` 子目錄，前端與後端各有獨立目錄。目錄名採全小寫 kebab-case：
+`web/package.json` 的 `name` 欄位不允許大寫（npm 對新套件名一律拒絕），Go module path 中的大寫字母會在 module cache 被轉義為 `!` + 小寫，
+且混用大小寫的路徑在不分大小寫的 macOS 與分大小寫的 CI 之間是 git 的常見地雷。此命名僅適用於原始碼；交付給使用者的 bundle 仍為 `BabyWei Bakery.app`（見 5.2）。
 
 ```text
 babywei-bakery/
@@ -130,21 +142,25 @@ BabyWei Bakery/
 
 `data/` 與 `.app` 分離，因此後續版本只需替換 `.app`，資料不受影響。
 
-`bakery` 透過 `os.Executable()` 向上解析四層取得 `BabyWei Bakery/` 目錄（`.app/Contents/MacOS/bakery` → `MacOS` → `Contents` → `.app` → `BabyWei Bakery/`），再定位其下的 `data/`。若 `data/` 不存在則建立並寫入範例資料。
+`bakery` 透過 `os.Executable()` 向上解析四層取得 `BabyWei Bakery/` 目錄（`.app/Contents/MacOS/bakery` → `MacOS` → `Contents` → `.app`
+→ `BabyWei Bakery/`），再定位其下的 `data/`。若 `data/` 不存在則建立並寫入範例資料。
 
 開發時 binary 不在 `.app` 內，路徑推導不成立，因此環境變數 `BAKERY_DATA_DIR` 的優先序高於路徑推導。
 
 ## 6. 資料模型
 
-SQLite，`journal_mode=delete`（預設）。不使用 WAL：本應用只有單一使用者，WAL 的並發讀取優勢用不到，而它會額外產生 `-wal` 與 `-shm` 檔案，破壞「複製資料夾即完整備份」的保證。DELETE 模式在乾淨關閉後只留單一 `.db` 檔。
+SQLite，`journal_mode=delete`（預設）。不使用 WAL：本應用只有單一使用者，WAL 的並發讀取優勢用不到，而它會額外產生 `-wal` 與 `-shm` 檔案，破壞「複製資料夾即完整備份」的保證。
+DELETE 模式在乾淨關閉後只留單一 `.db` 檔。
 
-**外鍵約束必須在 DSN 明確開啟。** SQLite 的 `foreign_keys` 預設為關閉，`modernc.org/sqlite` 亦然。實測結果：使用預設 DSN 時 `PRAGMA foreign_keys` 回傳 0，本節所有 `ON DELETE CASCADE` **靜默失效**（刪除父列後子列殘留），且可成功插入指向不存在父列的孤兒資料而無任何錯誤。因此連線 DSN 必須為：
+**外鍵約束必須在 DSN 明確開啟。** SQLite 的 `foreign_keys` 預設為關閉，`modernc.org/sqlite` 亦然。實測結果：使用預設 DSN 時 `PRAGMA foreign_keys` 回傳 0，
+本節所有 `ON DELETE CASCADE` **靜默失效**（刪除父列後子列殘留），且可成功插入指向不存在父列的孤兒資料而無任何錯誤。因此連線 DSN 必須為：
 
 ```text
 data/babywei.db?_pragma=foreign_keys(1)
 ```
 
-以 DSN 參數而非 `db.Exec("PRAGMA ...")` 設定，是因為 `database/sql` 會維護連線池，逐次執行 PRAGMA 只會作用在池中某一條連線上。開啟後實測 CASCADE 正常、孤兒插入回傳 `FOREIGN KEY constraint failed (787)`。
+以 DSN 參數而非 `db.Exec("PRAGMA ...")` 設定，是因為 `database/sql` 會維護連線池，逐次執行 PRAGMA 只會作用在池中某一條連線上。開啟後實測 CASCADE 正常、
+孤兒插入回傳 `FOREIGN KEY constraint failed (787)`。
 
 ```sql
 -- 進貨紀錄（原 db.costDB）
@@ -274,7 +290,8 @@ cost_per_g(材料) = Σ(該材料所有進貨的 price) / Σ(該材料所有進�
 
 無進貨紀錄時回傳 0。
 
-**已知取捨**：這是全期加權平均，非移動加權平均。若麵粉由每公斤 120 元漲至 150 元，舊進貨紀錄會永久將均價往下拉，即使舊貨早已用完。移動加權平均需追蹤每批進貨的剩餘量，較準確但複雜度顯著提高。決定先實作全期加權平均，並將其隔離在 `internal/domain/cost.go` 的單一函數中，日後可替換而不影響其他部分。
+**已知取捨**：這是全期加權平均，非移動加權平均。若麵粉由每公斤 120 元漲至 150 元，舊進貨紀錄會永久將均價往下拉，即使舊貨早已用完。移動加權平均需追蹤每批進貨的剩餘量，較準確但複雜度顯著提高。決定先實作全期加權平均，
+並將其隔離在 `internal/domain/cost.go` 的單一函數中，日後可替換而不影響其他部分。
 
 ### 7.2 配方換算
 
@@ -403,7 +420,9 @@ CSV 匯出（採購明細、銷售報表）與 A4 生產表列印維持在前端
 
 `.app` 內就是 Go binary 本身，不需要 shell wrapper。binary 啟動後自行 `exec.Command("open", "http://127.0.0.1:8787")` 開啟瀏覽器。若埠已被占用，改試後續埠號並以實際埠開啟。
 
-`Info.plist` 宣告 `LSUIElement=true`。`.app` 包的是純命令列程式，從不向 window server 註冊，Dock 會一直等它「啟動完成」而無止境彈跳；宣告為背景程式後沒有 Dock tile，自然不會彈。代價是使用者少了「Dock 右鍵 → 結束」，因此介面右上角提供「結束程式」按鈕，對應 `POST /api/shutdown`。該端點**只收 POST** —— GET 會被瀏覽器的預先擷取或誤點連結觸發，那會在使用者不知情的狀況下關掉程式。
+`Info.plist` 宣告 `LSUIElement=true`。`.app` 包的是純命令列程式，從不向 window server 註冊，Dock 會一直等它「啟動完成」而無止境彈跳；宣告為背景程式後沒有 Dock tile，
+自然不會彈。代價是使用者少了「Dock 右鍵 → 結束」，因此介面右上角提供「結束程式」按鈕，對應 `POST /api/shutdown`。該端點**只收 POST** —— GET 會被瀏覽器的預先擷取或誤點連結觸發，
+那會在使用者不知情的狀況下關掉程式。
 
 重複雙擊圖示不會開出第二個實例：啟動時先掃描本程式會用到的埠並比對 `/healthz` 的回應內容，已在執行就只把瀏覽器帶過去。否則兩個程序會寫同一個資料庫檔，而使用者分不出哪個視窗對應哪個。
 
@@ -429,7 +448,10 @@ Go 在 darwin/arm64 已自動 ad-hoc 簽章，這是 Apple Silicon 執行的必�
 { costDB: [...], dough: [...], fillings: [...], products: [...], sales: [...], productionLogs: [...] }
 ```
 
-欄位對應：`costDB[].weight` → `purchases.weight_g`、`costDB[].purchaseDate` → `purchases.purchase_date`、`dough[].ingredients[].pct` → `dough_ingredients.pct`、`fillings[].ingredients[].weight` → `filling_ingredients.weight_g`、`products[].doughWeight` → `products.dough_weight_g`（其餘同理）。
+欄位對應：`costDB[].weight` → `purchases.weight_g`、`costDB[].purchaseDate` → `purchases.purchase_date`、
+`dough[].ingredients[].pct` → `dough_ingredients.pct`、
+`fillings[].ingredients[].weight` → `filling_ingredients.weight_g`、
+`products[].doughWeight` → `products.dough_weight_g`（其餘同理）。
 
 `productionLogs` 缺少消耗明細（範本從未儲存），匯入時以**匯入當下**的配方定義回推並寫入 `production_consumption`。這是一次性的近似，匯入後即固定。匯入結果回報每張表的筆數與任何無法對應的項目。
 

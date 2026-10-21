@@ -1,10 +1,12 @@
 # BabyWei Bakery 初版實作計劃
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 把 `templates/index.html` 單檔原型改造成資料持久化的本地應用程式，做到可在瀏覽器完整操作、並以單一 Go binary 執行。
 
-**Architecture:** Go `net/http` 後端 + SQLite（`modernc.org/sqlite`，純 Go 無 CGO），前端 Vue 3 + Vite 經 `vite build` 產出後以 `embed.FS` 編進 binary。領域計算（成本、配方換算、庫存、報表）隔離為純函數，不碰資料庫也不碰 HTTP，可獨立測試。
+**Architecture:** Go `net/http` 後端 + SQLite（`modernc.org/sqlite`，純 Go 無 CGO），
+前端 Vue 3 + Vite 經 `vite build` 產出後以 `embed.FS` 編進 binary。領域計算（成本、配方換算、庫存、報表）隔離為純函數，不碰資料庫也不碰 HTTP，可獨立測試。
 
 **Tech Stack:** Go 1.27、`modernc.org/sqlite` v1.58.0、Vue 3.5.42、Vite 8.2.2、`@vitejs/plugin-vue` 6.0.8
 
@@ -16,7 +18,8 @@
 
 - **module 名稱**：`babywei-bakery`（全小寫 kebab-case，理由見 repo 根 `CLAUDE.md`）
 - **Go 版本**：`go.mod` 寫 `go 1.27`
-- **SQLite DSN 必須帶 `?_pragma=foreign_keys(1)`** —— 預設 `foreign_keys = 0`，所有 `ON DELETE CASCADE` 會靜默失效且可插入孤兒資料。必須用 DSN 參數而非 `db.Exec("PRAGMA ...")`，因為 `database/sql` 有連線池
+- **SQLite DSN 必須帶 `?_pragma=foreign_keys(1)`** —— 預設 `foreign_keys = 0`，所有 `ON DELETE CASCADE` 會靜默失效且可插入孤兒資料。
+  必須用 DSN 參數而非 `db.Exec("PRAGMA ...")`，因為 `database/sql` 有連線池
 - **`journal_mode` 保持預設 `delete`，不要改 WAL** —— 單一使用者，WAL 的並發優勢用不到，而 `-wal` / `-shm` 檔案會破壞「複製資料夾即完整備份」
 - **服務只綁 `127.0.0.1:8787`**，無認證
 - **資料庫路徑**：`BAKERY_DATA_DIR` 環境變數優先；否則由 `os.Executable()` 向上解析四層取得 `BabyWei Bakery/`，再定位其下 `data/`
@@ -61,7 +64,9 @@
 
 ## 對 spec 的一處刻意偏離
 
-Spec 第 5.1 節把 schema 放在專案根的 `schema/`。實作改放 **`internal/store/schema/`**，因為 Go 的 `//go:embed` **不能跨越 `..`** —— 放在根目錄的話 `internal/store/db.go` 無法嵌入它，只能改由 `main.go` 嵌入再傳進來，或在測試中用相對路徑讀檔（脆弱）。遷移檔本來就屬於 store 套件，與使用它的程式碼放在一起也是更好的 co-location。
+Spec 第 5.1 節把 schema 放在專案根的 `schema/`。實作改放 **`internal/store/schema/`**，
+因為 Go 的 `//go:embed` **不能跨越 `..`** —— 放在根目錄的話 `internal/store/db.go` 無法嵌入它，只能改由 `main.go` 嵌入再傳進來，或在測試中用相對路徑讀檔（脆弱）。
+遷移檔本來就屬於 store 套件，與使用它的程式碼放在一起也是更好的 co-location。
 
 ---
 
@@ -1518,7 +1523,8 @@ git commit -m "feat(babywei-bakery): 📊 \`domain/report.go\` 利潤統計與�
 
 ## Task 6 起的密度說明
 
-Task 1–5 是領域邏輯與資料層基礎，正確性關鍵且是本專案的價值所在，因此完整寫出程式碼與測試。Task 6 之後是重複性高的 CRUD 與 UI，改為給出**精確的簽章、必測的案例、以及不明顯的實作決定** —— 樣板碼由實作者依 Task 1–5 已建立的模式產出。每個 task 仍以「測試先寫、跑到紅、實作、跑到綠、commit」的循環執行。
+Task 1–5 是領域邏輯與資料層基礎，正確性關鍵且是本專案的價值所在，因此完整寫出程式碼與測試。Task 6 之後是重複性高的 CRUD 與 UI，改為給出**精確的簽章、必測的案例、
+以及不明顯的實作決定** —— 樣板碼由實作者依 Task 1–5 已建立的模式產出。每個 task 仍以「測試先寫、跑到紅、實作、跑到綠、commit」的循環執行。
 
 ---
 
@@ -1535,7 +1541,8 @@ Task 1–5 是領域邏輯與資料層基礎，正確性關鍵且是本專案的
 
 - Consumes: `(*store.DB).SQL()`、`store.Purchase`、`store.Dough`、`store.Filling`
 - Produces:
-  - `(*DB) ListPurchases(from, to, q string) ([]Purchase, error)` —— `from`/`to` 為空不設限；`q` 比對 name / brand / channel（不分大小寫，空字串不過濾）；依 `purchase_date DESC` 排序
+  - `(*DB) ListPurchases(from, to, q string) ([]Purchase, error)` —— `from`/`to` 為空不設限；
+    `q` 比對 name / brand / channel（不分大小寫，空字串不過濾）；依 `purchase_date DESC` 排序
   - `(*DB) CreatePurchase(p Purchase) (Purchase, error)` —— `ID` 為空時自動產生
   - `(*DB) UpdatePurchase(p Purchase) error`
   - `(*DB) DeletePurchase(id string) error`
@@ -1655,7 +1662,8 @@ Task 1–5 是領域邏輯與資料層基礎，正確性關鍵且是本專案的
 
 - 用 Go 1.22+ 的 `http.ServeMux` 路徑模式（`"GET /api/purchases/{id}"`），不需要第三方 router。
 - `/api` 前綴的 404 必須回 JSON，其餘路徑回 `index.html`（SPA fallback）。順序寫錯會讓 API 的 typo 回傳一頁 HTML，前端只會看到 JSON parse 錯誤，難以診斷。
-- **資料目錄解析**：`BAKERY_DATA_DIR` 優先；否則從 `os.Executable()` 起 `filepath.Dir` 四次取得 `BabyWei Bakery/`，再接 `data/`。開發時 binary 不在 `.app` 內，一律用環境變數。
+- **資料目錄解析**：`BAKERY_DATA_DIR` 優先；否則從 `os.Executable()` 起 `filepath.Dir` 四次取得 `BabyWei Bakery/`，再接 `data/`。
+  開發時 binary 不在 `.app` 內，一律用環境變數。
 - 埠被占用時往後試 `8788`、`8789`…最多 10 個，並以實際埠開啟瀏覽器。
 - `main.go` 開瀏覽器用 `exec.Command("open", url)`，失敗只印訊息不中止服務。
 
@@ -1711,7 +1719,8 @@ DELETE /api/products/{id}
 
 **不明顯的實作決定:**
 
-- `GET /api/products` 的回應是 `store.Product` 加上一個 `unitCost` 欄位。定義一個 `productResponse` 結構嵌入 `store.Product` 並加欄位，不要污染 store 的型別。
+- `GET /api/products` 的回應是 `store.Product` 加上一個 `unitCost` 欄位。定義一個 `productResponse` 結構嵌入 `store.Product` 並加欄位，
+  不要污染 store 的型別。
 - 外鍵約束失敗（`ON DELETE RESTRICT`）要轉成 **409 Conflict**，不是 500。判斷方式是檢查 error 字串含 `FOREIGN KEY constraint failed`。
 - `PATCH` 採「全欄位取代」語意（前端一律送完整物件），不做部分更新 —— 對這個規模的表單，部分更新的複雜度不划算。文件要寫清楚。
 
@@ -2092,7 +2101,9 @@ func FS() fs.FS {
 }
 ```
 
-⚠️ `//go:embed all:dist` 在 `internal/assets/dist/` 不存在時**編譯就會失敗**。因此 repo 必須保留一份佔位 `internal/assets/dist/index.html`（納入版控），讓乾淨 clone 也能 `go build`。`vite build` 的 `emptyOutDir: true` 會覆蓋它。
+⚠️ `//go:embed all:dist` 在 `internal/assets/dist/` 不存在時**編譯就會失敗**。
+因此 repo 必須保留一份佔位 `internal/assets/dist/index.html`（納入版控），讓乾淨 clone 也能 `go build`。
+`vite build` 的 `emptyOutDir: true` 會覆蓋它。
 
 - [ ] **Step 2: `scripts/build.sh`**
 
@@ -2180,7 +2191,8 @@ codesign -dv bakery 2>&1 | grep Signature
 
 - `store.Purchase.WeightG` 全程用 `WeightG`（非 `Weight`）；JSON 為 `weightG`
 - `domain.Component.Ratio` 是唯一的換算輸入欄位名；`FromDough` / `FromFilling` 是唯二的轉換入口
-- `domain.Totals` 的欄位是 `RevenueTWD` / `CostTWD` / `ProfitTWD`，JSON 為 `revenueTwd` / `costTwd` / `profitTwd`；Task 5、10、17 一致
+- `domain.Totals` 的欄位是 `RevenueTWD` / `CostTWD` / `ProfitTWD`，JSON 為 `revenueTwd` / `costTwd` / `profitTwd`；Task 5、10、
+  17 一致
 - `InventoryRow.Status` 取值固定為 `"out"` / `"low"` / `"ok"`；Task 4 定義、Task 10 傳遞、Task 13 消費
 - `ConfirmProduction` 全程用此名（非 `Produce` 或 `ConfirmAndDeduct`）；Task 7 定義、Task 10 呼叫
 - `store.ProductionLog.Consumption` 是 `[]Consumption`（非 map）；Task 1 定義、Task 4 與 7 消費
