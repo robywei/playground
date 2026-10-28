@@ -8,8 +8,8 @@ description: "CHANGELOG.md 月度歸檔：把已結束月份的紀錄補進 docs
 主檔需要修剪時（建議在月初），把**已結束月份**的紀錄補進 `docs/history/archive/<年>/CHANGELOG.md`。
 
 > 🔁 本檔由 repo-template 管理：要改共用流程請改範本、發版後 `copier update`，**不要直接改這裡**。
-> 本 repo 歸檔檔的歷史（有哪些年度檔、導入 git-cliff 時搬了什麼）記在
-> [`.claude/custom/git-changelog-monthly.md`](../../../../custom/git-changelog-monthly.md)。
+> 本 repo 歸檔檔的歷史（有哪些年度檔、導入 git-cliff 時搬了什麼）若有記錄，在
+> `.claude/custom/git-changelog-monthly.md`（存在才讀；需要記錄時新建）。
 
 ## 🔑 歸檔決定了主檔的生成範圍
 
@@ -29,7 +29,7 @@ docs/history/archive/
 
 - 每個年度檔內部時間倒序（最近的在最上面），標題為 `# 📋 CHANGELOG.md（<年> 年歸檔）`
 - 年度檔之間以頂部 `>` 引言互相 cross-reference；跨年第一次歸檔時新建該年目錄與檔案
-- 本 repo 實際有哪些年度檔：見 custom 規則檔
+- 本 repo 實際有哪些年度檔：`ls docs/history/archive/`（custom 規則檔若有記錄搬入的經過，一併讀）
 
 ## 執行步驟
 

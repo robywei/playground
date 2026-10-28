@@ -8,8 +8,7 @@
 
 🔁 本檔與 [`lifecycle.md`](lifecycle.md)（命名、改名、退場、`plugin.json` 對帳）由 repo-template 管理：
 要改請改範本、發版後 `copier update`，**不要直接改這裡**。
-本 repo 的 domain 用途、寫 skill 的本 repo 慣例與待補情境記在
-[`.claude/custom/skills-readme.md`](../custom/skills-readme.md)，**先讀**。
+本 repo 的 domain 用途、寫 skill 的本 repo 慣例與待補情境若有記錄，在 `.claude/custom/skills-readme.md`（存在才讀，見〈repo 專屬補充〉）。
 
 ## 目錄形狀
 
@@ -23,10 +22,20 @@
         <skill>/SKILL.md           ## 一個情境 = 一個 skill（frontmatter 必填 name / description）
         <skill>/<參考檔>.md         ## 選用：只有這個 skill 用得到的細節，從 SKILL.md 連過去
         <skill>/<附帶腳本>.sh       ## 選用：與該 skill 同目錄
-  custom/<對應檔>.md               ## repo 專屬規則（範本只產生一次，之後歸 repo）
+  custom/<domain>-<skill>.md       ## 選用：repo 專屬補充，需要時才建（範本不產生）
 ```
 
 ⚠️ **`plugin.json` 沒有 `skills` 欄位時，預設掃 `skills/` 子目錄**，不必逐一列出。
+
+## repo 專屬補充：`.claude/custom/`（需要時才建）
+
+範本擁有的 skill 不在 repo 端改；只在本 repo 成立的規則與案例，寫成 `.claude/custom/<domain>-<skill>.md`
+（例：`git-commit.md`、`archive-distill.md`；本 README 的補充是 `skills-readme.md`）。
+
+- **範本不產生 placeholder**：沒有這個檔＝本 repo 沒有專屬規則，skill 照共用流程走，不必回報「找不到」
+- 寫什麼：本 repo 特有的高頻缺陷、文件落點、改了會立即影響線上的路徑、踩過的實例、跨 repo 路由、待補情境（skill backlog）
+- 不寫：共用流程的複本（必然漂移）、skill 清單（看 session 啟動時注入的 description）
+- 範本不擁有這個目錄，`copier update` 不會新增、覆蓋或刪除裡面的檔
 
 ### 有哪些 skill：用查的，不要手寫清單
 

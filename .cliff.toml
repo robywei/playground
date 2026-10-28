@@ -27,7 +27,7 @@
 ##    ⚠️ 若日後要改回顯示 body，`commit_preprocessors` 需補回三條：剝 trailer、
 ##    清單符號正規化（MD004）、行首 `#` 標題降級（否則會與 `## 📆 <日期>` 同級汙染結構）。
 ##
-## ⚠️ 七個實測踩雷（改本檔前務必知道，全部踩過）：
+## ⚠️ 八個實測踩雷（改本檔前務必知道，全部踩過）：
 ##   1. TOML `"""` 字串的**行尾 `\` 會吃掉換行與其後所有前導空白** —— TOML 規範，
 ##      不是 git-cliff 的行為。官方範例大量用 `\` 續行，照抄會讓縮排全部消失、
 ##      巢狀清單被打平，而輸出看起來只像「模板沒寫對」。本檔一律用 Tera 的 `{%- -%}`。
@@ -50,13 +50,18 @@
 ##      台灣早上 8 點前的 commit 全被標成前一天，和 `generate.sh` 用 TZ 算的範圍邊界也對不上。
 ##      → 讀環境變數 `TZ`（沒設時用 Asia/Taipei；`generate.sh` 也用同一個預設，排程 workflow 設了 `TZ`）。
 ##      2026-10-27 實測：同一段 commit，TZ=Asia/Taipei 分成 10-27、10-26 兩天；TZ=UTC 全部擠在 10-26
+##   8. **版本段落的開頭要保留換行**（`{% if version %}` 不加 `-`）：body 是每個版本各渲染一次再接起來，
+##      前一段只以一個換行結尾 → 吃掉開頭的換行，`## 🏷️` 就緊貼上一段的清單（MD022、MD032）。
+##      沒有 tag 的 repo 只走日期分段、踩不到；有 tag 且不只一段時才出現（2026-10-28 實測）。
+##      各版本底下都有同名的分類標題（`### ⚙️ Chore`）→ header 把 MD024 設成 `siblings_only`（只要求同層不重名）
 
 [changelog]
 header = """
 <!-- 本檔是生成物，`lint.sh md --fix` 對它無效 —— 下次生成就覆蓋回去。 -->
 <!-- markdownlint-disable MD013 -->
-<!-- ↑ 行長由 commit message 主旨決定，生成檔天生無法滿足 MD013。這是唯一的
-     豁免方式（全域停用該規則會讓其他手寫檔也失去約束）。 -->
+<!-- markdownlint-configure-file { "MD024": { "siblings_only": true } } -->
+<!-- ↑ 行長由 commit message 主旨決定，生成檔天生無法滿足 MD013；各版本底下都有同名的分類標題，
+     MD024 只要求同層不重名。這是唯一的豁免方式（改全域設定會讓其他手寫檔也失去約束）。 -->
 
 # 📋 Changelog
 
@@ -78,9 +83,9 @@ body = """
 {{ commit.message }}\
 {%- if remote.github.owner %} - ([{{ commit.id | truncate(length=7, end="") }}]({{ self::remote_url() }}/commit/{{ commit.id }})){% endif %}
 {%- endmacro -%}
-{% if version -%}
+{% if version %}
 ## 🏷️ [{{ version | trim_start_matches(pat="v") }}]\
-{%- if previous.version %}({{ self::remote_url() }}/compare/{{ previous.version }}..{{ version }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
+{%- if previous.version and remote.github.owner %}({{ self::remote_url() }}/compare/{{ previous.version }}..{{ version }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
 {%- for group, group_commits in commits | group_by(attribute="group") %}
 
 ### {{ group }}

@@ -9,8 +9,8 @@ description: "重新生成 CHANGELOG.md（git-cliff 從 commit message 全量產
 設定在 repo 根的 [`.cliff.toml`](../../../../../.cliff.toml)。
 
 > 🔁 本檔由 repo-template 管理：要改共用流程請改範本、發版後 `copier update`，**不要直接改這裡**。
-> 本 repo 的情況（有沒有每日排程代為生成、CI 會不會推進 `main`、有哪些 bot 會 commit）記在
-> [`.claude/custom/git-changelog.md`](../../../../custom/git-changelog.md)，**先讀**。
+> 本 repo 的情況（有沒有每日排程代為生成、CI 會不會推進 `main`、有哪些 bot 會 commit）若有記錄，在
+> `.claude/custom/git-changelog.md`，**存在就先讀**（不存在＝沒有專屬資訊：沒有排程，使用者要求時才生成）。
 
 ## 生成指令
 
@@ -25,11 +25,13 @@ description: "重新生成 CHANGELOG.md（git-cliff 從 commit message 全量產
 
 ## 🔑 生成範圍：歸檔是**可選的修剪動作**，不是排程義務
 
-**起點 = max(遷移日, 歸檔截止月的下一個月 1 號)**，遷移日＝`.cliff.toml` 第一次進版控的 commit 日期（腳本自己算）：
+**起點 = 歸檔截止月的下一個月 1 號**，從未歸檔就是完整歷史。有遷移前的手寫內容（歸檔檔裡的 slash 月標題）時，
+再夾到遷移日以後 —— 遷移日＝`.cliff.toml` 第一次進版控的 commit 日期（腳本自己算）：
 
 | 歸檔狀態 | 主檔起點 |
 | --- | --- |
-| 從未歸檔（含 `docs/history/archive/` 不存在、或只有遷移時搬入的手寫內容） | 遷移日 |
+| 從未歸檔、沒有手寫歷史（含 `docs/history/archive/` 不存在） | 完整歷史（第一筆 commit 起） |
+| 從未歸檔、只有遷移時搬入的手寫內容 | 遷移日 |
 | 10/10 歸檔到 9 月 | `2026-10-01` |
 | 11/05 歸檔到 10 月 | `2026-11-01` |
 

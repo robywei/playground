@@ -10,13 +10,13 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
 
 > 🔁 本檔由 repo-template 管理：要改共用流程請改範本、發版後 `copier update`，**不要直接改這裡**
 > （直接改會被當成本地客製保留下來，從此和其他 repo 分岔）。只屬於本 repo 的規則寫在
-> [`.claude/custom/git-commit.md`](../../../../custom/git-commit.md)。
+> `.claude/custom/git-commit.md`（需要時才建，見 [`.claude/skills/README.md`](../../../README.md)〈repo 專屬補充〉）。
 > 每個 session 都會載入的 `.claude/rules/common/git.md`（pathspec、不動整個工作區、不改寫已 push 的歷史）這裡不重複。
 
 ## 步驟 0：讀本 repo 專屬規則
 
-先讀 [`.claude/custom/git-commit.md`](../../../../custom/git-commit.md)，其中的規則與下列共用步驟**一起**適用。
-檔案不存在時**明確回報「找不到本 repo 的 custom 規則檔」**，不要靜默略過。
+`.claude/custom/git-commit.md` 存在就先讀，其中的規則與下列共用步驟**一起**適用；
+不存在＝本 repo 沒有專屬規則，直接照共用步驟（範本不產生這個檔，需要時才建）。
 
 ## 執行步驟
 

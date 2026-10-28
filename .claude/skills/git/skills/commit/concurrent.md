@@ -4,8 +4,7 @@
 我只要提交自己那幾個檔案**」，以及併發造成的幾種「看起來成功／失敗、其實相反」。
 
 > 📎 本檔是 [`git:commit`](SKILL.md) 的參考檔：commit 流程中遇到併發狀況時才讀，處理完回到 `git:commit`。
-> 由 repo-template 管理，**不要直接改這裡**；本 repo 踩過的實例記在
-> [`.claude/custom/git-commit.md`](../../../../custom/git-commit.md)。
+> 由 repo-template 管理，**不要直接改這裡**；本 repo 踩過的實例若有記錄，在 `.claude/custom/git-commit.md`。
 > 判讀原則（差異指令、截斷不是盤點）在每個 session 都載入的 `.claude/rules/common/evidence.md`，這裡只寫 git 上的形狀。
 
 ## 1. HEAD 會在回合之間前進 —— 先確認，不要憑記憶

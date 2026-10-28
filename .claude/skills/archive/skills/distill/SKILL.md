@@ -16,7 +16,7 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 > 換電腦就消失。memory 只適合放「純本機脈絡 / 暫時筆記」。
 
 🔁 本檔與同目錄的參考檔由 repo-template 管理：要改共用流程請改範本、發版後 `copier update`，**不要直接改這裡**。
-本 repo 的跨 repo 路由、文件落點等專屬資訊記在 [`.claude/custom/archive-distill.md`](../../../../custom/archive-distill.md)，**先讀**。
+本 repo 的跨 repo 路由、文件落點等專屬資訊若有記錄，在 `.claude/custom/archive-distill.md`，**存在就先讀**（不存在＝沒有專屬資訊）。
 
 ## 何時用
 
@@ -82,7 +82,7 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 6. **落點在哪個 repo**
    - 改到的內容屬於 **repo-template 擁有的檔**（看 `.copier-answers.yml` 的範本產出、或檔頭寫著「由 repo-template 管理」）
      → **改範本 repo、發版、各 repo `copier update`**，不要在本地改（本地改會被當成客製靜默保留，從此分岔）；
-     只屬於本 repo 的補充寫進 `.claude/custom/`
+     只屬於本 repo 的補充寫進 `.claude/custom/<domain>-<skill>.md`（沒有就新建，見 [skills 佈局](../../../README.md)）
    - 知識屬於別的 repo → 寫進那個 repo（對照表見 custom 規則檔）
 7. **收尾提交**：走 [`git:commit`](../../../git/skills/commit/SKILL.md)
    - 萃取的內容若只是替這段對話某筆**還沒 push** 的 commit 補完同一件事 → 併回它（見 `git:commit`「一筆還是拆多筆」）；
