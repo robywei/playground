@@ -20,16 +20,11 @@
 （設定 `.cliff.toml`，跨 repo 標準版，改動前先讀該檔檔頭）。
 手寫的條目下次生成就消失。
 
-⚠️ **`.cliff.toml` 刻意不納入版控**（2026-09-11 起，已列進 `.gitignore`）——
-本 repo 是臨時測試用，不參與 k8s-infra 那支每日 changelog 排程
-（`scripts/changelog-auto/`，它的納入條件正是「`.cliff.toml` 有被 git 追蹤」）。
-在那之前它每天都會把本 repo 掃進去，然後因為這裡沒有 `scripts/changelog/generate.sh`
-而報一次 ERROR、拉低整批的退出碼。
-→ 生成仍可在本機手動跑（下方指令），但 **clone 下來不會有那個檔**；需要時從
-<https://github.com/axiom-infra/k8s-infra/blob/main/.cliff.toml> 取一份。
+`.cliff.toml` 與 `scripts/changelog/generate.sh` 由 repo-template 提供（基礎層，v0.0.15 起納入版控）。
+沒有排程：需要時走 `/git:changelog`，或手動跑：
 
 ```sh
-git-cliff --config .cliff.toml -o CHANGELOG.md
+./scripts/changelog/generate.sh
 ```
 
 生成後以 `chore(changelog):` 提交 —— `.cliff.toml` 會把這類 commit 從下一次生成

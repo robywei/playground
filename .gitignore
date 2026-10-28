@@ -23,8 +23,3 @@ __pycache__/
 ## 本 repo 專屬：寫在這一段之後（update 的三方合併會保留，基線之後的變更也合得進來）
 ## ---------------------------------------------------------------------------
 .scratch
-
-## changelog 生成設定：本 repo 是臨時測試用，刻意不納入版控 ——
-## k8s-infra 的每日 changelog 排程以「.cliff.toml 有被 git 追蹤」為納入條件，
-## 追蹤它會讓那支排程每天對本 repo 報 ERROR（這裡沒有 scripts/changelog/generate.sh）
-.cliff.toml
