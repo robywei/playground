@@ -1,7 +1,6 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v0.0.12
+_commit: v0.0.15
 _src_path: git@github.com:robywei/repo-template.git
-components: []
 git_extra_skills: []
 github_owner: robywei
 plugin_author_email: robywei@gmail.com

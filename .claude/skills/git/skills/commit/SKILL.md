@@ -51,8 +51,12 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
      外放的判準與驗證程序見 [`archive:distill` 的 `claude-md.md`](../../../archive/skills/distill/claude-md.md)
      （⚠️ 先確認落點真的存在，否則是「刪掉」不是「外放」）
    - 本 repo 的文件落點（哪些目錄有 `README.md`、`docs/` 怎麼分）：見 custom 規則檔
+   - 🚫 **不要手寫 `CHANGELOG.md`** —— 它由 `git-cliff` 從 commit message 全量生成
+     （設定見 repo 根的 [`.cliff.toml`](../../../../../.cliff.toml)），手寫的條目下次生成就消失
 4. **建立 Git commit**：
-   - 主旨用 Conventional Commits（`type(scope): 描述`），**主旨必須能獨立讀懂**
+   - 主旨用 Conventional Commits（`type(scope): 描述`），type 決定 CHANGELOG 的分類（映射表在 `.cliff.toml`）；
+     路徑與關鍵字用 `` ` `` 包住 —— 例 ``docs: `README.md` 更新規範``
+   - ⚠️ **CHANGELOG 只取主旨**（body 不輸出，條目行尾帶 commit 連結）→ **主旨必須能獨立讀懂**，不能依賴 body 補完
    - **body 寫 markdown 清單**（單檔用完整路徑、同目錄多檔可分組）：細節留在 git，`git log --grep=<關鍵字>` / `-S` 搜得到
    - 🔴 **push 後寫錯無法修**（改 message ＝ 改寫歷史），只能在後續 commit 補說明
    - 🔴 **主旨與 body 之間必須空一行** —— 少了它 git 把**整段**（含 body 清單）當成主旨。
@@ -63,7 +67,11 @@ description: "Git 提交流程（**git domain 的預設情境**）：分析變�
    - 用自動修正（`--fix`）解格式問題時，⚠️ **它會靜默改壞內容，跑完必須 `git diff`**
    - push 後用 `git ls-remote origin refs/heads/main` 核對 SHA，**不要只信 `Everything up-to-date`**
    - 非 `/git` 觸發的事件中途 commit 可延後到收尾再推，見下方「一筆還是拆多筆」
-6. **宣告完成前，三件事都要查**（少查任何一件，「已完成」就可能是假的）：
+6. 🚫 **不生成 `CHANGELOG.md`，也不要詢問** —— push 完就到這裡結束（理由與本 repo 有沒有排程代為生成：
+   見 [`/git:changelog`](../changelog/SKILL.md) 與 custom 規則檔）
+   - 只有使用者**主動要求**時才照 `/git:changelog` 生成，**獨立一筆** `chore(changelog)` commit，再重跑步驟 5
+   - ⚠️ **不能與步驟 4 併筆、也不能 `--amend` 併回去**：條目帶步驟 4 那筆的 hash，生成時它必須已經存在
+7. **宣告完成前，三件事都要查**（少查任何一件，「已完成」就可能是假的）：
 
    ```bash
    git status --porcelain                 ## 必須是空的
@@ -100,6 +108,13 @@ git commit --fixup=<sha> && git rebase --autosquash --autostash origin/main  ## 
 - 🔴 **已 push 就不併**，改為獨立一筆、主旨寫明它補的是哪件事
 - 🔴 **範圍內夾著別的 agent 的 commit 就不 rebase** —— 會改掉它的 hash，對方下一步會以為 HEAD 被動過 → 改為獨立一筆
 - 併完 body 要補上新增的那幾項（`--amend` 時去掉 `--no-edit`；fixup 會被 squash 掉 message，事後 `--amend` 補）
+- ⚠️ **已生成的 `CHANGELOG.md` 帶著 commit hash** —— amend 改變 hash 會讓連結指向不存在的 commit。
+  安全順序是「先 amend → 重新生成 → 再 commit 生成物」，並驗一次：
+
+  ```bash
+  grep -oE '/commit/[0-9a-f]{40}' CHANGELOG.md | sed 's|/commit/||' \
+    | while read -r sha; do git cat-file -e "${sha}^{commit}" || echo "❌ ${sha}"; done
+  ```
 
 ### 為了能併回去：非 `/git` 觸發的 commit 可以先不 push
 
@@ -118,6 +133,7 @@ git commit --fixup=<sha> && git rebase --autosquash --autostash origin/main  ## 
     GitHub 上的舊 commit 在 GC 前仍可用網址直接打開 —— 改寫擋不住已外洩的副本，只會讓 CHANGELOG、文件裡引用的 SHA
     全部指向不存在的 commit，而且不報錯。服務已退場時，改為確認那組密碼沒有被複用到別處
   - 處置紀錄寫進 custom 規則檔時，**不要寫是哪個服務、殘留在哪幾個 commit**（等於做出一份「哪裡有舊憑證」的索引）
+- CHANGELOG.md 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)，由 `.cliff.toml` 保證，**不靠人維持**
 - 🔴 **`git add` / `git commit` / `git push` 的 stderr 一律不遮**（要靜音只能靜 stdout 的 `-q`）：
   `git add` 因某條路徑不存在而 `fatal`（含被 `copier update` 刪掉、只剩 staged 刪除的檔）時，接著的 `git commit` 印
   `no changes added to commit`、`git push` 印 `Everything up-to-date` —— **整串看起來像提交成功**

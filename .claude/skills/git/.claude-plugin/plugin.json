@@ -1,7 +1,7 @@
 {
   "name": "git",
   "version": "1.0.0",
-  "description": "Git 操作：提交流程（預設，含併行 agent 提交衝突）",
+  "description": "Git 操作：提交流程（預設，含併行 agent 提交衝突）、CHANGELOG 生成（git-cliff）、CHANGELOG 月度歸檔",
   "author": {
     "name": "robywei",
     "email": "robywei@gmail.com"
