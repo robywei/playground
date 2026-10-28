@@ -33,6 +33,9 @@
 （例：`git-commit.md`、`archive-distill.md`；本 README 的補充是 `skills-readme.md`）。
 
 - **範本不產生 placeholder**：沒有這個檔＝本 repo 沒有專屬規則，skill 照共用流程走，不必回報「找不到」
+- **建之前先過 [`archive:distill`](archive/skills/distill/SKILL.md)〈落點判斷〉**：範本已涵蓋 → 不寫；通用 → 回饋範本；
+  描述本 repo 的某個東西 → 該目錄 README、`docs/` 或 `CLAUDE.md`；只在跑那支 skill 時才需要、做法又和共用流程不同，才建
+- skill 不連結 custom 檔（它可能不存在）：寫純文字路徑，並說明「存在才讀」
 - 寫什麼：本 repo 特有的高頻缺陷、文件落點、改了會立即影響線上的路徑、踩過的實例、跨 repo 路由、待補情境（skill backlog）
 - 不寫：共用流程的複本（必然漂移）、skill 清單（看 session 啟動時注入的 description）
 - 範本不擁有這個目錄，`copier update` 不會新增、覆蓋或刪除裡面的檔
@@ -135,7 +138,7 @@ for d in .claude/skills/*/skills; do echo "$(basename "$(dirname "$d")"): $(ls "
 | **`plugin.json` 的 `name` 必須等於目錄名** | `plugin validate` 會擋 |
 | **plugin 名不可撞內建 slash command** | 撞名時手動 `/<name>` 叫不出來、自動觸發照樣中，看起來像時好時壞。保留字見 [`lifecycle.md`](lifecycle.md) |
 | **範本擁有的 domain 不手改 `plugin.json`、不在 repo 端改名** | 由範本產生；本地修改會被 update 靜默保留成分岔（見「範本擁有的 domain」） |
-| **相對連結深度** | `skills/<x>/SKILL.md` 到 repo 根是 `../../../../../`；`references/` 檔是 `../../../../`；到 `.claude/custom/` 是 `../../../../custom/`；跨 domain 是 `../../../<domain>/skills/<skill>/SKILL.md`；同 domain 手足是 `../<skill>/SKILL.md` |
+| **相對連結深度** | `skills/<x>/SKILL.md` 到 repo 根是 `../../../../../`；`references/` 檔是 `../../../../`；跨 domain 是 `../../../<domain>/skills/<skill>/SKILL.md`；同 domain 手足是 `../<skill>/SKILL.md` |
 | **裸檔名連結是搬檔最易漏的一類** | `](foo.md)` 沒有 `../` 前綴 → `grep '](\.\.'` 抓不到。要抓所有 `](...)` 才看得到 |
 | **共用前置放 `references/`，不要各 skill 複述** | 例：`<domain>/references/auth.md`（憑證載入、參數合法值）。複述必漂移 |
 | **本檔與 root `CLAUDE.md` 不列 skill 清單** | 見「有哪些 skill」；root 只留叫用慣例 `/<domain>:<skill>` 與本檔指標 |

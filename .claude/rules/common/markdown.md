@@ -4,7 +4,7 @@ paths: ["**/*.md"]
 
 # Markdown（讀寫 `.md` 時）
 
-> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 `.claude/custom/` 或 repo 自己的 CLAUDE.md
+> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 repo 自己的 CLAUDE.md
 
 規則本身的唯一來源是 `.markdownlint-cli2.jsonc`（也由範本管理）。這裡只列工具修不了、或會修錯的。
 

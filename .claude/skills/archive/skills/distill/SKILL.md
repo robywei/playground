@@ -24,6 +24,25 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 - 對話前先確認「過去類似事是否已有 skill / docs」（先查再做）
 - 想把舊對話刪掉前，先確認知識已落進 git
 
+## 落點判斷：先問「能不能通用」（分流之前）
+
+範本擁有的 skill 與通用規則在每個 repo 都是同一份；對話在哪個 repo 進行，不代表知識屬於那個 repo。依序問：
+
+| 順序 | 問題 | 是 → 去處 |
+| --- | --- | --- |
+| 1 | **範本已經涵蓋了嗎？**（skill 內文與參考檔、`.claude/rules/common/`、腳本的預設行為） | 丟棄；不要在本 repo 重述範本的預設 |
+| 2 | **換到別的 repo 也成立嗎？**（repo 名稱、路徑、主機換成佔位符後仍然對；別的 repo 也可能踩到） | **回饋 repo-template**：改它的 `template/`，發版後各 repo `copier update`（做法見下） |
+| 3 | **描述的是本 repo 的某個東西嗎？**（目錄、腳本、部署、主機、慣例、歷史） | 本 repo **既有**的文件：依下方分流表（該目錄 README、`docs/`、`CLAUDE.md`） |
+| 4 | **只在跑某支範本 skill 時才需要，而且本 repo 的做法和共用流程不同？** | 才建 `.claude/custom/<domain>-<skill>.md`（見 [skills 佈局](../../../README.md)〈repo 專屬補充〉） |
+
+- **custom 是最後的選項**：每一條都要答得出「補充範本 skill 的哪一步、本 repo 為什麼不同」，答不出來就屬於 1～3
+- **順手收斂**：本 repo 有 `.claude/custom/` 時掃一遍 —— 範本後來已涵蓋的刪掉、其實通用的回饋範本；刪到空就整個目錄刪掉
+- **回饋範本的做法**：範本位置看 `.copier-answers.yml` 的 `_src_path`（本機 clone 通常在同一層目錄），在那個 repo
+  照它的 `CLAUDE.md`〈修改範本的流程〉改 `template/`、檢查、commit。打 tag 發版會影響所有 repo → **先問使用者**；
+  不想現在發版就只推 `main`、不打 tag（copier 只認 tag，使用端拿不到半成品），之後一起發版
+  - 🔴 不要在本 repo 先寫一份本地版「暫存」：update 之後就是兩份講同一件事，本地那份還會漂移
+  - 本 repo 就是 repo-template 時：通用的直接改 `template/`，只關本 repo 維護的寫進 `CLAUDE.md`
+
 ## 分流：寫到哪裡（皆進 git）
 
 | 內容性質 | 去處 |
@@ -45,7 +64,7 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 
 ## 步驟
 
-1. **掃過對話**，逐段問：這是上表哪一類？
+1. **掃過對話**，逐段先過〈落點判斷〉，留在本 repo 的再問：這是分流表哪一類？
 2. **先全域去重**（寫之前一定先查，**這步不可跳過**）：
    - **skill**：掃過 `.claude/skills/` 下**所有 domain** 的 `SKILL.md`，不只看「明顯對應」那個 ——
      也要 grep skill 的**內文與參考檔**，不只 description（原理常躺在參考檔或服務 README 裡）
@@ -79,11 +98,10 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 
    漏掉時**完全無聲**：repo 看起來對、lint 全綠、線上照舊。部署方式去該目錄的 README 查（別自己拼），
    部署後回頭 diff 線上與 repo，確認只差你改的那一段。本 repo 有哪些這類檔：見 custom 規則檔
-6. **落點在哪個 repo**
+6. **落點在哪個 repo**（判斷順序見〈落點判斷〉）
    - 改到的內容屬於 **repo-template 擁有的檔**（看 `.copier-answers.yml` 的範本產出、或檔頭寫著「由 repo-template 管理」）
-     → **改範本 repo、發版、各 repo `copier update`**，不要在本地改（本地改會被當成客製靜默保留，從此分岔）；
-     只屬於本 repo 的補充寫進 `.claude/custom/<domain>-<skill>.md`（沒有就新建，見 [skills 佈局](../../../README.md)）
-   - 知識屬於別的 repo → 寫進那個 repo（對照表見 custom 規則檔）
+     → **改範本 repo、發版、各 repo `copier update`**，不要在本地改（本地改會被當成客製靜默保留，從此分岔）
+   - 知識屬於別的 repo → 寫進那個 repo
 7. **收尾提交**：走 [`git:commit`](../../../git/skills/commit/SKILL.md)
    - 萃取的內容若只是替這段對話某筆**還沒 push** 的 commit 補完同一件事 → 併回它（見 `git:commit`「一筆還是拆多筆」）；
      跨主題的通則才獨立一筆
@@ -111,4 +129,5 @@ description: "對話收尾萃取：把這段對話裡執行過、驗證過的知
 - 寫了沒驗證 → 把過時路徑 / 旗標固化進 repo，比沒寫更糟
 - 改了「repo 不等於線上」的檔沒部署
 - 在本地改範本擁有的檔 → 下次 update 不會覆蓋、也不會提示，從此和其他 repo 分岔
+- 通用的知識寫進本 repo 的 `.claude/custom/` 或 `CLAUDE.md` → 其他 repo 拿不到；範本之後補上同一條時又變成兩份
 - 萃取完忘了 push → 換電腦 / 刪對話後就遺失（commit ≠ push）

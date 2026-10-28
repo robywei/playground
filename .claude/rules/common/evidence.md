@@ -1,6 +1,6 @@
 # 判讀證據（下結論前）
 
-> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 `.claude/custom/` 或 repo 自己的 CLAUDE.md
+> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 repo 自己的 CLAUDE.md
 
 踩到時輸出全都是「成功」。下結論前先問：**答案相反時，這個輸出會長得不一樣嗎？** 不會，它就不是證據。
 

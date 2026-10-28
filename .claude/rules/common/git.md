@@ -1,6 +1,6 @@
 # Git 操作
 
-> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 `.claude/custom/` 或 repo 自己的 CLAUDE.md
+> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 repo 自己的 CLAUDE.md
 
 commit 與 push 的完整流程見 `/git:commit`；以下是沒走那支 skill 時也要守的。
 

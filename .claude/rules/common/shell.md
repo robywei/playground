@@ -4,7 +4,7 @@ paths: ["**/*.sh", "**/githooks/*"]
 
 # Shell 腳本（讀寫 `.sh`、githooks 時）
 
-> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 `.claude/custom/` 或 repo 自己的 CLAUDE.md
+> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 repo 自己的 CLAUDE.md
 
 腳本是 bash 語意，Bash 工具卻跑 zsh → **手測一律 `bash <檔>`**；macOS 的 `/bin/bash` 是 3.2，
 和 PATH 上的新版 bash 行為不同，兩個都可能是 shebang 實際跑到的那一支。

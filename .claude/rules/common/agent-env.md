@@ -1,6 +1,6 @@
 # Agent 執行環境（下任何 Bash 指令前）
 
-> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 `.claude/custom/` 或 repo 自己的 CLAUDE.md
+> 由 repo-template 管理（基礎層），要改請改範本；本 repo 專屬規則寫在 repo 自己的 CLAUDE.md
 
 以下踩到時多半**輸出看起來正常**、或後半段靜默沒跑，只看有沒有報錯發現不了。
 派工給子 agent 時，把 zsh 那幾條一起寫進 prompt（重犯者多半是子 agent）。
@@ -36,7 +36,7 @@
 
 ## 機密
 
-- 取機密與使用它在**同一次呼叫**內完成，不要 `source ~/.zshrc`；本機的載入方式寫在本 repo 的 CLAUDE.md 或 custom
+- 取機密與使用它在**同一次呼叫**內完成，不要 `source ~/.zshrc`；本機的載入方式寫在本 repo 的 CLAUDE.md
 - 🔴 碰到機密的腳本**不要 `bash -x`／`set -x`**（xtrace 印出展開後的 token，進了 transcript 撤不回）
 - 確認有沒有值只印布林：`[ -n "$TOKEN" ] && echo set`；`echo "${TOKEN:-MISSING}"` 在有值時印的就是值本身
 
